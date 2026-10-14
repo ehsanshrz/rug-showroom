@@ -1,5 +1,5 @@
 import './style.css';
-import { rugs, sizes, sizeLabel, priceFor, money } from './rugs.js';
+import { rugs, sizes, sizeLabel as formatSize, priceFor, money as formatMoney } from './rugs.js';
 
 const icons = {
   arrow: '<path d="M4 12h16m-6-6 6 6-6 6"/>',
@@ -17,6 +17,8 @@ const icons = {
 };
 const icon = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] || icons.arrow}</svg>`;
 const escape = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+const sizeLabel = value => escape(formatSize(value));
+const money = value => escape(formatMoney(value));
 const $ = selector => document.querySelector(selector);
 const state = { style: '', material: '', size: '', search: '', sort: 'featured', expanded: false, rug: rugs[0].id, room: 'living', floor: 'oak', studioSize: '8x10', rotated: false, light: 'day', inspect: null, inspectSize: '8x10', folio: [] };
 try {
@@ -138,7 +140,7 @@ function renderStudio() {
   const floor = { oak: ['#d8c7a9', '#b6a080'], walnut: ['#715840', '#4f3929'], concrete: ['#bab9b1', '#9c9b94'] }[state.floor];
   $('#room-stage').classList.toggle('evening', state.light === 'evening');
   $('#room-stage').innerHTML = `<span class="stage-caption">${state.room === 'living' ? 'The living room' : state.room === 'dining' ? 'The dining room' : 'The bedroom'} / A study in proportion</span>
-    <svg class="room" viewBox="0 0 720 560" role="img" aria-label="${rug.name} in a ${state.room} room on ${state.floor} flooring, ${sizeLabel(state.studioSize)}, ${state.rotated ? 'rotated 90 degrees, ' : ''}${state.light === 'day' ? 'daylight' : 'evening lighting'}">
+    <svg class="room" viewBox="0 0 720 560" role="img" aria-label="${rug.name} in a ${escape(state.room)} room on ${escape(state.floor)} flooring, ${sizeLabel(state.studioSize)}, ${state.rotated ? 'rotated 90 degrees, ' : ''}${state.light === 'day' ? 'daylight' : 'evening lighting'}">
       <defs><pattern id="floor-grain" width="60" height="560" patternUnits="userSpaceOnUse"><rect width="60" height="560" fill="${floor[0]}"/><path d="M0 0v560M5 0v560M14 0Q35 150 15 280T18 560M40 0Q60 150 45 280T42 560" stroke="${floor[1]}" stroke-opacity=".3" fill="none"/></pattern><filter id="room-shadow"><feDropShadow dx="4" dy="8" stdDeviation="6" flood-color="#302719" flood-opacity=".2"/></filter><linearGradient id="room-light" x2="1" y2=".6"><stop stop-color="${state.light === 'day' ? '#fffbea' : '#ffd38b'}" stop-opacity=".4"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
       <rect width="720" height="560" fill="${state.floor === 'concrete' ? floor[0] : 'url(#floor-grain)'}"/><path d="M42 37h636v486H42Z" fill="none" stroke="${floor[1]}" stroke-opacity=".45" stroke-width="2"/><path d="M45 40h630M45 40v480" stroke="#f7f4ef" stroke-opacity=".45" stroke-width="7"/>
       <g transform="translate(360 325) rotate(${state.rotated ? 90 : 0})" filter="url(#room-shadow)">${rug.svgPattern('studio-art').replace('<svg ', `<svg x="${-width / 2}" y="${-height / 2}" width="${width}" height="${height}" preserveAspectRatio="none" `)}</g>
@@ -147,10 +149,11 @@ function renderStudio() {
 }
 
 function inspect(id, size = state.size || '8x10') {
-  state.inspect = id;
-  state.inspectSize = size;
   const rug = rugs.find(item => item.id === id);
-  $('#inspect-dialog').innerHTML = `<button class="icon-btn modal-close" data-close="inspect-dialog" aria-label="Close inspection">${icon('close')}</button><div class="inspect-layout"><div class="inspect-art"><div class="zoom-window"><div class="zoom-art">${rug.svgPattern('inspect-art')}</div></div><button class="zoom-controls" id="zoom" aria-pressed="false">${icon('search')} &nbsp; Explore the weave · Zoom in</button></div><div class="inspect-copy"><div class="eyebrow">${rug.collection}</div><h2 id="inspect-title">${rug.name}</h2><p>${rug.description}</p><dl class="spec-grid"><div><dt>Origin</dt><dd>${rug.origin}</dd></div><div><dt>Knot density</dt><dd class="mono">${rug.kpsi} KPSI</dd></div><div><dt>Pile height</dt><dd class="mono">${rug.pileHeight}</dd></div><div><dt>Time on the loom</dt><dd class="mono">${rug.loomTime}</dd></div><div><dt>Natural fiber</dt><dd>${rug.material}</dd></div><div><dt>Archive reference</dt><dd class="mono">${rug.sku}</dd></div></dl><label class="control-title" for="inspect-size">Choose your dimensions</label><select class="control-select" id="inspect-size">${rug.sizes.map(value => `<option value="${value}" ${value === size ? 'selected' : ''}>${sizeLabel(value)}</option>`).join('')}</select><div class="modal-price"><strong id="inspect-price">${money(priceFor(rug, size))}</strong><span>Estimated archival value · USD</span></div><button class="btn" data-action="add-inspect">${icon('bag')} Add to Inquiry Folio ${icon('arrow')}</button><button class="text-link" data-action="studio" data-id="${id}">See it in the Room Studio ${icon('arrow')}</button></div></div>`;
+  if (!rug || !sizes.includes(size)) return;
+  state.inspect = rug.id;
+  state.inspectSize = size;
+  $('#inspect-dialog').innerHTML = `<button class="icon-btn modal-close" data-close="inspect-dialog" aria-label="Close inspection">${icon('close')}</button><div class="inspect-layout"><div class="inspect-art"><div class="zoom-window"><div class="zoom-art">${rug.svgPattern('inspect-art')}</div></div><button class="zoom-controls" id="zoom" aria-pressed="false">${icon('search')} &nbsp; Explore the weave · Zoom in</button></div><div class="inspect-copy"><div class="eyebrow">${rug.collection}</div><h2 id="inspect-title">${rug.name}</h2><p>${rug.description}</p><dl class="spec-grid"><div><dt>Origin</dt><dd>${rug.origin}</dd></div><div><dt>Knot density</dt><dd class="mono">${rug.kpsi} KPSI</dd></div><div><dt>Pile height</dt><dd class="mono">${rug.pileHeight}</dd></div><div><dt>Time on the loom</dt><dd class="mono">${rug.loomTime}</dd></div><div><dt>Natural fiber</dt><dd>${rug.material}</dd></div><div><dt>Archive reference</dt><dd class="mono">${rug.sku}</dd></div></dl><label class="control-title" for="inspect-size">Choose your dimensions</label><select class="control-select" id="inspect-size">${rug.sizes.map(value => `<option value="${value}" ${value === size ? 'selected' : ''}>${sizeLabel(value)}</option>`).join('')}</select><div class="modal-price"><strong id="inspect-price">${money(priceFor(rug, size))}</strong><span>Estimated archival value · USD</span></div><button class="btn" data-action="add-inspect">${icon('bag')} Add to Inquiry Folio ${icon('arrow')}</button><button class="text-link" data-action="studio" data-id="${rug.id}">See it in the Room Studio ${icon('arrow')}</button></div></div>`;
   if (!$('#inspect-dialog').open) $('#inspect-dialog').showModal();
 }
 
@@ -161,6 +164,7 @@ function persistFolio() {
 }
 
 function addFolio(id, size) {
+  if (!rugs.some(rug => rug.id === id) || !sizes.includes(size)) return;
   if (state.folio.some(item => item.id === id && item.size === size)) { notify('This piece and size are already in your folio.'); return; }
   if (state.folio.length >= 50) { notify('Your folio is full. Remove a piece to add another.'); return; }
   state.folio.push({ id, size });
@@ -177,6 +181,7 @@ function renderFolio() {
 }
 
 function selectStudio(id) {
+  if (!rugs.some(rug => rug.id === id)) return;
   state.rug = id;
   state.studioSize = state.inspect === id && $('#inspect-dialog').open ? state.inspectSize : state.size || state.studioSize;
   $('#studio-rug').value = id;
@@ -212,8 +217,8 @@ document.addEventListener('click', event => {
   if (action === 'add') addFolio(id, state.size || '8x10');
   if (action === 'add-inspect') addFolio(state.inspect, state.inspectSize);
   if (action === 'open-folio') { renderFolio(); $('#folio-dialog').showModal(); }
-  if (close) $(`#${close}`).close();
-  if (clear) {
+  if (['inspect-dialog', 'folio-dialog'].includes(close)) $(`#${close}`).close();
+  if (['style', 'material', 'size', 'search'].includes(clear)) {
     state[clear] = '';
     $(`#${clear === 'search' ? 'search' : `${clear}-filter`}`).value = '';
     renderCatalog();
@@ -229,12 +234,15 @@ document.addEventListener('click', event => {
   }
   if (room || floor || studioSize || light) {
     const key = room ? 'room' : floor ? 'floor' : studioSize ? 'studioSize' : 'light';
-    state[key] = room || floor || studioSize || light;
+    const value = room || floor || studioSize || light;
+    const allowed = { room: ['living', 'dining', 'bedroom'], floor: ['oak', 'walnut', 'concrete'], studioSize: sizes, light: ['day', 'evening'] };
+    if (!allowed[key].includes(value)) return;
+    state[key] = value;
     updatePressed(`[data-${key === 'studioSize' ? 'studio-size' : key}]`, key, key);
     renderStudio();
   }
-  if (remove !== undefined) { state.folio.splice(Number(remove), 1); persistFolio(); renderFolio(); }
-  if (consultation) {
+  if (remove !== undefined && /^\d+$/.test(remove) && Number(remove) < state.folio.length) { state.folio.splice(Number(remove), 1); persistFolio(); renderFolio(); }
+  if (['private', 'virtual'].includes(consultation)) {
     $('#booking-form').dataset.consultation = consultation;
     document.querySelectorAll('[data-consultation]').forEach(item => { item.classList.toggle('active', item === button); item.setAttribute('aria-pressed', String(item === button)); });
     $('#location-field').hidden = consultation === 'virtual';
@@ -242,12 +250,26 @@ document.addEventListener('click', event => {
   }
 });
 
-for (const key of ['style', 'material', 'size']) $(`#${key}-filter`).addEventListener('change', event => { state[key] = event.target.value; renderCatalog(); });
+for (const key of ['style', 'material', 'size']) $(`#${key}-filter`).addEventListener('change', event => {
+  const value = event.target.value;
+  const allowed = key === 'size' ? sizes : rugs.map(rug => rug[key]);
+  if (value && !allowed.includes(value)) return;
+  state[key] = value;
+  renderCatalog();
+});
 $('#search').addEventListener('input', event => { state.search = event.target.value; renderCatalog(); });
-$('#sort').addEventListener('change', event => { state.sort = event.target.value; renderCatalog(); });
-$('#studio-rug').addEventListener('change', event => { state.rug = event.target.value; renderStudio(); });
+$('#sort').addEventListener('change', event => {
+  if (!['featured', 'low', 'high', 'density'].includes(event.target.value)) return;
+  state.sort = event.target.value;
+  renderCatalog();
+});
+$('#studio-rug').addEventListener('change', event => {
+  if (!rugs.some(rug => rug.id === event.target.value)) return;
+  state.rug = event.target.value;
+  renderStudio();
+});
 $('#inspect-dialog').addEventListener('change', event => {
-  if (event.target.id === 'inspect-size') {
+  if (event.target.id === 'inspect-size' && sizes.includes(event.target.value)) {
     state.inspectSize = event.target.value;
     $('#inspect-price').textContent = money(priceFor(rugs.find(rug => rug.id === state.inspect), state.inspectSize));
   }
