@@ -31,8 +31,8 @@ function pattern(type, c) {
 
 export const rugs = records.map(([id, name, collection, origin, style, material, price, kpsi, pileHeight, loomTime, description, colors, motif], index) => ({
   id, sku: `AV-${String(index + 1).padStart(3, '0')}`, name, collection, origin, style, material, sizes: [...sizes], price, kpsi, pileHeight, loomTime, description,
-  svgPattern(prefix = id) {
-    const artwork = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 440" role="img" aria-label="${name} handwoven rug">
+  svgPattern(prefix = id, label = `${name} handwoven rug`) {
+    const artwork = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 440" role="img" aria-label="${label}">
       <defs>${pattern(motif, colors)}<pattern id="weft" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 1H4M1 0V4" stroke="#342719" stroke-opacity=".13" stroke-width=".6"/><path d="M0 3H4" stroke="#fff" stroke-opacity=".17" stroke-width=".6"/></pattern><pattern id="fringe" width="5" height="12" patternUnits="userSpaceOnUse"><path d="M2 0 1 12M3 0 4 11" stroke="${colors[2]}" stroke-width="1.5"/></pattern></defs>
       <rect x="12" y="2" width="316" height="436" fill="url(#fringe)"/>
       <rect x="10" y="14" width="320" height="412" fill="${colors[0]}"/>
