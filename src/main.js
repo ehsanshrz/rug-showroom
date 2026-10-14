@@ -1,5 +1,5 @@
 import './style.css';
-import { rugs, sizes, sizeLabel as formatSize, priceFor, money as formatMoney } from './rugs.js';
+import { rugs, sizes, sizeLabel as formatSize, priceFor } from './rugs.js';
 import { bookingToday } from './booking.js';
 
 const icons = {
@@ -16,13 +16,29 @@ const icons = {
   rotate: '<path d="M20 8a8 8 0 1 0 0 8M20 3v5h-5"/>',
   menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
 };
-const icon = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] || icons.arrow}</svg>`;
+const icon = name => `<svg class="icon-${name}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] || icons.arrow}</svg>`;
 const escape = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
-const sizeLabel = value => escape(formatSize(value));
-const money = value => escape(formatMoney(value));
+const persianDigits = value => String(value).replace(/\d/g, digit => '۰۱۲۳۴۵۶۷۸۹'[digit]);
+const sizeLabel = value => escape(persianDigits(formatSize(value)));
+const money = value => escape(new Intl.NumberFormat('fa-IR', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value));
 const $ = selector => document.querySelector(selector);
 const state = { style: '', material: '', size: '', search: '', sort: 'featured', expanded: false, rug: rugs[0].id, room: 'living', floor: 'oak', studioSize: '8x10', rotated: false, light: 'day', inspect: null, inspectSize: '8x10', folio: [] };
 const pendingRequests = { inquiry: false, appointment: false };
+const rugTranslations = {
+  oushak: ['یادگار اوشاک', 'آرشیو آناتولی', 'اوشاک، ترکیه', 'قالی ایرانی', 'پشم', 'یادگاری آفتاب‌خورده با رنگ‌های سفالی و جو دوسری. پشم دست‌ریس و نقش‌مایه‌های گیاهی سخاوتمندانه، شعر آرام بافندگی آناتولی را در خود دارند.'],
+  atlas: ['عاجی اطلس', 'مجموعه اطلس', 'کوه‌های اطلس، مراکش', 'مراکشی', 'پشم', 'پشم کوهستانی نرم، با شبکه‌ای نامنظم از زغالی. بیانی لمسی از سنت بافندگی بنی‌اورین.'],
+  jaipur: ['شن‌های جیپور', 'دار معاصر', 'جیپور، هند', 'مدرن', 'پشم', 'قوس‌های پیکرتراش و سطوح خاکی در ترکیبی متعادل و لطیف کنار هم می‌آیند؛ بافته‌ای معاصر که آهسته و با دست ساخته شده است.'],
+  tabriz: ['باغ تبریز', 'آرشیو ایرانی', 'تبریز، ایران', 'ایرانی', 'ابریشم', 'باغی ظریف از ترنج‌ها و پیچک‌های روان، بافته‌شده با ابریشم درخشان؛ ترکیبی ریزبافت با عمق و وضوحی چشمگیر.'],
+  sahara: ['خطوط صحرا', 'ضروریات آرام', 'مراکش', 'مینیمال', 'جوت', 'جوت طبیعی و ریتمی خطی و خلوت؛ بافتی صادقانه، تنوعی طبیعی و حضوری آرام و متین.'],
+  kars: ['گلیم قارص', 'آرشیو آناتولی', 'قارص، ترکیه', 'گلیم', 'پشم', 'لوزی‌های پلکانی به رنگ آجری، نیلی و کتانِ رنگ‌باخته؛ برداشتی تخت‌باف از زبان هندسی ماندگار آناتولی.'],
+  dune: ['مطالعه تپه‌های شنی', 'دار معاصر', 'بهادوهی، هند', 'مدرن', 'ابریشم', 'لایه‌های رنگیِ هم‌تن، خطوط متغیر تپه‌های شنی را تداعی می‌کنند. ابریشم با هر تغییر زاویه، نور را به شکلی تازه می‌گیرد.'],
+  rif: ['زیتونی ریف', 'مجموعه اطلس', 'کوه‌های ریف، مراکش', 'مراکشی', 'پشم', 'زمینه‌ای زیتونی با نقش‌های عاجی و زنده. پشم محلیِ پرزدار، به فضا حال‌وهوایی آسوده و زیبا می‌بخشد.'],
+  agra: ['پالمت آگرا', 'آرشیو ایرانی', 'آگرا، هند', 'ایرانی', 'پشم', 'پالمت‌های بزرگ بر زمینه‌ای با رنگ صورتیِ کهنه گسترده شده‌اند. رنگ‌های الهام‌گرفته از گیاهان و پشم متراکم، بافته‌ای پُرلایه و ماندگار می‌سازند.'],
+  linen: ['زمینه کتان', 'ضروریات آرام', 'جیپور، هند', 'مینیمال', 'جوت', 'چهارخانه‌ای آرام از الیاف طبیعی. تضاد رنگی ظریف، زیبایی خام مواد و دست‌ساخته‌بودن آن را ارج می‌نهد.'],
+};
+const rugText = (rug, field) => rugTranslations[rug.id][{ name: 0, collection: 1, origin: 2, style: 3, material: 4, description: 5 }[field]];
+const stylesFa = { Persian: 'ایرانی', Modern: 'مدرن', Moroccan: 'مراکشی', Kilim: 'گلیم', Minimalist: 'مینیمال' };
+const materialsFa = { Wool: 'پشم', Silk: 'ابریشم', Jute: 'جوت' };
 try {
   const saved = JSON.parse(localStorage.getItem('atelier-vera-folio') || '[]');
   if (Array.isArray(saved)) state.folio = saved.filter(item => item && rugs.some(rug => rug.id === item.id) && sizes.includes(item.size)).map(({ id, size }) => ({ id, size })).slice(0, 50);
@@ -62,48 +78,48 @@ function heroRoom() {
 
 $('#app').innerHTML = `
   <header><div class="wrap header-inner">
-    <a class="brand" href="#" aria-label="Atelier Véra home">ATELIER VÉRA<span>THE ART OF THE WOVEN</span></a>
-    <nav class="nav" id="main-nav" aria-label="Main navigation"><a href="#archive">The Archive</a><a href="#studio">Room Studio</a><a href="#craft">Craft & Provenance</a><a href="#showroom">Private Showroom</a></nav>
-    <button class="icon-btn mobile-menu" aria-label="Toggle navigation" aria-controls="main-nav" aria-expanded="false">${icon('menu')}</button>
-    <button class="folio-trigger" data-action="open-folio">${icon('bag')} Inquiry Folio <span class="badge" id="folio-count">0</span></button>
+    <a class="brand" href="#" aria-label="صفحه اصلی آتلیه ورا">ATELIER VÉRA<span>هنر بافت</span></a>
+    <nav class="nav" id="main-nav" aria-label="پیمایش اصلی"><a href="#archive">آرشیو</a><a href="#studio">استودیوی فضا</a><a href="#craft">هنر و خاستگاه</a><a href="#showroom">نمایشگاه خصوصی</a></nav>
+    <button class="icon-btn mobile-menu" aria-label="باز و بسته کردن پیمایش" aria-controls="main-nav" aria-expanded="false">${icon('menu')}</button>
+    <button class="folio-trigger" data-action="open-folio">${icon('bag')} فهرست انتخاب <span class="badge" id="folio-count">۰</span></button>
   </div></header>
   <main>
     <section class="wrap hero" aria-labelledby="hero-title">
-      <div class="hero-copy"><div class="eyebrow">Considered pieces. Collected stories.</div><h1 id="hero-title">Woven to<br>be lived in.<br><em>Made to endure.</em></h1><p>Extraordinary rugs, patiently handwoven.<br>A curated archive of texture, tradition, and quiet beauty for the spaces we call home.</p>
-        <div class="hero-actions"><a class="btn" href="#archive">Explore the Archive ${icon('arrow')}</a><a class="text-link" href="#studio">Find your perspective ${icon('arrow')}</a></div>
-        <div class="provenance-metrics"><div><strong>100%</strong>Hand-spun natural fibers</div><div><strong>Made for you</strong>Bespoke sizing available</div><div><strong>Archival grade</strong>Craft beyond generations</div></div>
+      <div class="hero-copy"><div class="eyebrow">گزیده‌هایی با داستان‌های ماندگار</div><h1 id="hero-title">برای زندگی<br>بافته شده؛<br><em>برای ماندن.</em></h1><p>قالی‌هایی استثنایی، باحوصله و به‌دست انسان بافته‌شده.<br>آرشیوی گزیده از بافت، سنت و زیبایی آرام برای خانه‌های ما.</p>
+        <div class="hero-actions"><a class="btn" href="#archive">گشت‌وگذار در آرشیو ${icon('arrow')}</a><a class="text-link" href="#studio">زاویه دید خود را بیابید ${icon('arrow')}</a></div>
+        <div class="provenance-metrics"><div><strong>۱۰۰٪</strong>الیاف طبیعی دست‌ریس</div><div><strong>برای شما</strong>امکان سفارش اندازه دلخواه</div><div><strong>ماندگار</strong>هنری برای نسل‌ها</div></div>
       </div>
-      <div class="hero-art">${heroRoom()}<div class="hero-rug">${rugs[0].svgPattern('hero')}</div><div class="art-top"><span>The considered home — No. 01</span><span>Handwoven, always</span></div><div class="vertical-note">A quieter kind of luxury</div><div class="art-card"><div class="mini-art">${rugs[0].svgPattern('hero-thumb')}</div><div><h3>The Oushak Heirloom</h3><p>Oushak, Türkiye &nbsp; / &nbsp; Hand-spun wool</p></div><button data-action="inspect" data-id="oushak" aria-label="Inspect The Oushak Heirloom">${icon('arrow')}</button></div></div>
+      <div class="hero-art">${heroRoom()}<div class="hero-rug">${rugs[0].svgPattern('hero', rugText(rugs[0], 'name'))}</div><div class="art-top"><span>خانه‌ای سنجیده — شماره ۰۱</span><span>همیشه دست‌بافت</span></div><div class="vertical-note">تجملی آرام‌تر</div><div class="art-card"><div class="mini-art">${rugs[0].svgPattern('hero-thumb', rugText(rugs[0], 'name'))}</div><div><h3>یادگار اوشاک</h3><p>اوشاک، ترکیه &nbsp; / &nbsp; پشم دست‌ریس</p></div><button data-action="inspect" data-id="oushak" aria-label="مشاهده یادگار اوشاک">${icon('arrow')}</button></div></div>
     </section>
-    <div class="trust-bar wrap"><span>${icon('weave')} Handwoven. Never mass-produced.</span><span>${icon('globe')} From the world's finest weaving regions</span><span>${icon('leaf')} Natural fibers. Enduring character.</span><span>${icon('bag')} A personal approach to every piece</span></div>
-    <section class="wrap section archive-heading" id="archive" aria-labelledby="archive-title"><div class="section-top"><div><div class="eyebrow">The woven archive</div><h2 id="archive-title">A world beneath your feet.</h2></div><p>Ten exceptional pieces. Centuries of artistry.<br>Find the weave that speaks to your space.</p></div>
+    <div class="trust-bar wrap"><span>${icon('weave')} دست‌بافت، نه تولید انبوه</span><span>${icon('globe')} از بهترین سرزمین‌های بافندگی جهان</span><span>${icon('leaf')} الیاف طبیعی، جلوه‌ای ماندگار</span><span>${icon('bag')} نگاهی شخصی به هر بافته</span></div>
+    <section class="wrap section archive-heading" id="archive" aria-labelledby="archive-title"><div class="section-top"><div><div class="eyebrow">آرشیو بافته‌ها</div><h2 id="archive-title">جهانی زیر پای شما.</h2></div><p>ده بافته استثنایی، هنر چندین سده.<br>بافته‌ای را بیابید که با فضای شما سخن می‌گوید.</p></div>
       <div class="catalog-tools"><div class="filter-group">
-        <label><span class="sr-only">Weaving style</span><select id="style-filter" aria-label="Weaving style"><option value="">Weaving style</option>${['Persian', 'Modern', 'Moroccan', 'Kilim', 'Minimalist'].map(value => `<option>${value}</option>`).join('')}</select></label>
-        <label><span class="sr-only">Fiber material</span><select id="material-filter" aria-label="Fiber material"><option value="">Fiber material</option>${['Wool', 'Silk', 'Jute'].map(value => `<option>${value}</option>`).join('')}</select></label>
-        <label><span class="sr-only">Dimensions</span><select id="size-filter" aria-label="Dimensions"><option value="">Dimensions</option>${sizes.map(size => `<option value="${size}">${sizeLabel(size)}</option>`).join('')}</select></label>
-      </div><label class="search-box">${icon('search')}<input id="search" type="search" placeholder="Search the archive" aria-label="Search the archive" maxlength="100"></label></div>
-      <div class="catalog-status"><div><span id="result-count" aria-live="polite"></span><div class="filter-pills" id="filter-pills"></div></div><label>Sort by: <select class="sort-select" id="sort" aria-label="Sort rugs"><option value="featured">Featured</option><option value="low">Price: Low to High</option><option value="high">Price: High to Low</option><option value="density">Knot Density</option></select></label></div>
-      <div class="catalog" id="catalog"></div><div class="archive-footer"><button class="btn outline" id="view-archive">View the complete archive <span class="mono">10</span> ${icon('arrow')}</button></div>
+        <label><span class="sr-only">سبک بافت</span><select id="style-filter" aria-label="سبک بافت"><option value="">سبک بافت</option>${['Persian', 'Modern', 'Moroccan', 'Kilim', 'Minimalist'].map(value => `<option value="${value}">${stylesFa[value]}</option>`).join('')}</select></label>
+        <label><span class="sr-only">جنس الیاف</span><select id="material-filter" aria-label="جنس الیاف"><option value="">جنس الیاف</option>${['Wool', 'Silk', 'Jute'].map(value => `<option value="${value}">${materialsFa[value]}</option>`).join('')}</select></label>
+        <label><span class="sr-only">ابعاد</span><select id="size-filter" aria-label="ابعاد"><option value="">ابعاد</option>${sizes.map(size => `<option value="${size}">${sizeLabel(size)}</option>`).join('')}</select></label>
+      </div><label class="search-box">${icon('search')}<input id="search" type="search" placeholder="جست‌وجو در آرشیو" aria-label="جست‌وجو در آرشیو" maxlength="100"></label></div>
+      <div class="catalog-status"><div><span id="result-count" aria-live="polite"></span><div class="filter-pills" id="filter-pills"></div></div><label>مرتب‌سازی: <select class="sort-select" id="sort" aria-label="مرتب‌سازی قالی‌ها"><option value="featured">منتخب</option><option value="low">قیمت: از کم به زیاد</option><option value="high">قیمت: از زیاد به کم</option><option value="density">تراکم گره</option></select></label></div>
+      <div class="catalog" id="catalog"></div><div class="archive-footer"><button class="btn outline" id="view-archive">مشاهده همه بافته‌ها <span class="mono">۱۰</span> ${icon('arrow')}</button></div>
     </section>
-    <section class="wrap section studio" id="studio" aria-labelledby="studio-title"><div class="section-top"><div><div class="eyebrow">The room studio</div><h2 id="studio-title">See it in your world.</h2></div><p>A new perspective, before the first thread arrives.<br>Explore proportion, material, and light.</p></div>
+    <section class="wrap section studio" id="studio" aria-labelledby="studio-title"><div class="section-top"><div><div class="eyebrow">استودیوی فضا</div><h2 id="studio-title">قالی را در دنیای خود ببینید.</h2></div><p>پیش از رسیدن نخستین تار، منظره‌ای تازه.<br>تناسب، جنس و نور را بیازمایید.</p></div>
       <div class="studio-layout"><div id="room-stage" class="room-stage"></div><div class="studio-controls">
-        <div><label class="control-title" for="studio-rug">01 / Your selected weave</label><select class="control-select" id="studio-rug">${rugs.map(rug => `<option value="${rug.id}">${rug.name}</option>`).join('')}</select></div>
-        <div><span class="control-title">02 / The setting</span><div class="segmented" id="room-options">${[['living', 'Living'], ['dining', 'Dining'], ['bedroom', 'Bedroom']].map(([value, label]) => `<button data-room="${value}" aria-pressed="${value === 'living'}" class="${value === 'living' ? 'active' : ''}">${label}</button>`).join('')}</div></div>
-        <div><span class="control-title">03 / Underfoot</span><div class="floor-options">${[['oak', 'Nordic oak'], ['walnut', 'Walnut'], ['concrete', 'Concrete']].map(([value, label]) => `<button class="floor-option ${value === 'oak' ? 'active' : ''}" data-floor="${value}" aria-label="${{ oak: 'Light Nordic Oak', walnut: 'Dark American Walnut', concrete: 'Polished Concrete' }[value]}" aria-pressed="${value === 'oak'}"><span class="swatch ${value}"></span>${label}</button>`).join('')}</div></div>
-        <div><span class="control-title">04 / Proportion</span><div class="segmented" id="studio-sizes">${sizes.map(size => `<button data-studio-size="${size}" aria-pressed="${size === '8x10'}" class="${size === '8x10' ? 'active' : ''}">${sizeLabel(size)}</button>`).join('')}</div><button class="rotate-btn" id="rotate" aria-pressed="false">${icon('rotate')} &nbsp; Rotate orientation 90°</button></div>
-        <div><span class="control-title">05 / A different light</span><div class="segmented" id="light-options"><button data-light="day" class="active" aria-pressed="true">Natural daylight</button><button data-light="evening" aria-pressed="false">Warm evening</button></div></div>
-        <button class="btn" id="studio-inspect">Discover this piece ${icon('arrow')}</button>
-      </div></div><p class="studio-note">${icon('room')} An architectural impression. Colors and proportions are illustrative; our concierge can help you find the perfect fit.</p>
+        <div><label class="control-title" for="studio-rug">۰۱ / بافته منتخب شما</label><select class="control-select" id="studio-rug">${rugs.map(rug => `<option value="${rug.id}">${rugText(rug, 'name')}</option>`).join('')}</select></div>
+        <div><span class="control-title">۰۲ / فضای اتاق</span><div class="segmented" id="room-options">${[['living', 'نشیمن'], ['dining', 'ناهارخوری'], ['bedroom', 'اتاق‌خواب']].map(([value, label]) => `<button data-room="${value}" aria-pressed="${value === 'living'}" class="${value === 'living' ? 'active' : ''}">${label}</button>`).join('')}</div></div>
+        <div><span class="control-title">۰۳ / کف‌پوش</span><div class="floor-options">${[['oak', 'بلوط نوردیک'], ['walnut', 'گردو'], ['concrete', 'بتن']].map(([value, label]) => `<button class="floor-option ${value === 'oak' ? 'active' : ''}" data-floor="${value}" aria-label="${{ oak: 'بلوط روشن نوردیک', walnut: 'گردوی تیره آمریکایی', concrete: 'بتن صیقلی' }[value]}" aria-pressed="${value === 'oak'}"><span class="swatch ${value}"></span>${label}</button>`).join('')}</div></div>
+        <div><span class="control-title">۰۴ / تناسب</span><div class="segmented" id="studio-sizes">${sizes.map(size => `<button data-studio-size="${size}" aria-pressed="${size === '8x10'}" class="${size === '8x10' ? 'active' : ''}">${sizeLabel(size)}</button>`).join('')}</div><button class="rotate-btn" id="rotate" aria-pressed="false">${icon('rotate')} &nbsp; چرخش ۹۰ درجه</button></div>
+        <div><span class="control-title">۰۵ / نوری دیگر</span><div class="segmented" id="light-options"><button data-light="day" class="active" aria-pressed="true">نور طبیعی روز</button><button data-light="evening" aria-pressed="false">گرمای عصر</button></div></div>
+        <button class="btn" id="studio-inspect">آشنایی با این بافته ${icon('arrow')}</button>
+      </div></div><p class="studio-note">${icon('room')} تصویری از فضا؛ رنگ‌ها و تناسب‌ها تقریبی‌اند. همراه آتلیه برای یافتن اندازه مناسب در کنار شماست.</p>
     </section>
-    <section class="wrap section" id="craft"><div class="craft-layout"><div class="craft-art">${rugs[3].svgPattern('craft')}<span class="craft-label">THE HUMAN HAND IN EVERY THREAD</span></div><div class="craft-copy"><div class="eyebrow">Craft & provenance</div><h2>Not simply made.<br><em>Quietly mastered.</em></h2><p>From the foothills of the Atlas to the centuries-old looms of Anatolia, every weave carries the language of its place. We work with independent weaving ateliers who believe, as we do, that some things cannot be hurried.</p><div class="craft-points"><div><h3>A living tradition</h3><p>Hand-knotted and flatwoven techniques, passed from one generation to the next.</p></div><div><h3>Material, honestly</h3><p>Natural wool, luminous silk, and earthy jute. Nothing more than what belongs.</p></div></div><a class="text-link" href="#showroom">Meet your next heirloom ${icon('arrow')}</a></div></div></section>
-    <section class="wrap section booking" id="showroom"><div class="booking-copy"><div class="eyebrow">By appointment. By your side.</div><h2>A personal invitation<br>to <em>find your piece.</em></h2><p>Feel the fibers. Discover the stories. Join us for a private archival pull, or let our concierge bring the atelier to you through a live studio walkthrough.</p><div class="locations">NEW YORK &nbsp; · &nbsp; COPENHAGEN &nbsp; · &nbsp; MILAN</div></div><div id="booking-content"><form id="booking-form" class="booking-form">
-      <div class="full"><span class="control-title">Your consultation</span><div class="segmented"><button type="button" data-consultation="private" class="active" aria-pressed="true">Private showroom visit</button><button type="button" data-consultation="virtual" aria-pressed="false">Virtual studio walkthrough</button></div></div>
-      <label class="field">Your name<input name="name" autocomplete="name" placeholder="Full name" required maxlength="100"></label><label class="field">Email address<input name="email" type="email" autocomplete="email" placeholder="you@example.com" required maxlength="254"></label>
-      <label class="field" id="location-field">Your atelier<select name="location"><option>New York</option><option>Copenhagen</option><option>Milan</option></select></label><label class="field">Preferred date<input name="date" type="date" required min="${bookingToday('New York')}" aria-label="Preferred date"><span class="form-note">Showroom local date; virtual visits use UTC.</span></label>
-      <label class="field full">A note for our concierge (optional)<textarea name="note" rows="2" maxlength="1500" placeholder="Tell us a little about your space…"></textarea></label><div class="full"><button class="btn" type="submit">Request an appointment ${icon('arrow')}</button></div><p class="form-note full">An appointment request, not an instant reservation. Our concierge will review your preferred date.</p>
+    <section class="wrap section" id="craft"><div class="craft-layout"><div class="craft-art">${rugs[3].svgPattern('craft', rugText(rugs[3], 'name'))}<span class="craft-label">دست انسان در تار و پود</span></div><div class="craft-copy"><div class="eyebrow">هنر و خاستگاه</div><h2>تنها ساخته نشده؛<br><em>با ظرافت پرورده شده.</em></h2><p>از دامنه‌های اطلس تا دارهای چندصدساله آناتولی، هر بافته زبان زادگاه خود را روایت می‌کند. با کارگاه‌های مستقل بافندگی همراهیم که همچون ما باور دارند بعضی چیزها را نمی‌توان شتاب‌زده ساخت.</p><div class="craft-points"><div><h3>سنتی زنده</h3><p>گره‌بافی و تخت‌بافی، هنری که نسل‌به‌نسل منتقل شده است.</p></div><div><h3>صداقت در جنس</h3><p>پشم طبیعی، ابریشم درخشان و جوت خاکی‌رنگ؛ به‌اندازه آنچه باید باشد.</p></div></div><a class="text-link" href="#showroom">یادگار بعدی خود را بیابید ${icon('arrow')}</a></div></div></section>
+    <section class="wrap section booking" id="showroom"><div class="booking-copy"><div class="eyebrow">قرار ملاقات؛ همراه شما</div><h2>دعوتی صمیمانه<br>برای <em>یافتن قالی شما.</em></h2><p>الیاف را لمس کنید و داستان‌ها را بشنوید. برای دیداری خصوصی از آرشیو به ما بپیوندید یا در گشت زنده استودیو، همراه آتلیه را به خانه بیاورید.</p><div class="locations">نیویورک &nbsp; · &nbsp; کپنهاگ &nbsp; · &nbsp; میلان</div></div><div id="booking-content"><form id="booking-form" class="booking-form">
+      <div class="full"><span class="control-title">نوع مشاوره</span><div class="segmented"><button type="button" data-consultation="private" class="active" aria-pressed="true">بازدید خصوصی از نمایشگاه</button><button type="button" data-consultation="virtual" aria-pressed="false">گشت مجازی در استودیو</button></div></div>
+      <label class="field">نام شما<input name="name" autocomplete="name" placeholder="نام و نام خانوادگی" required maxlength="100"></label><label class="field">نشانی ایمیل<input name="email" type="email" autocomplete="email" placeholder="you@example.com" required maxlength="254"></label>
+      <label class="field" id="location-field">آتلیه<select name="location"><option value="New York">نیویورک</option><option value="Copenhagen">کپنهاگ</option><option value="Milan">میلان</option></select></label><label class="field">تاریخ پیشنهادی<input name="date" type="date" required min="${bookingToday('New York')}" aria-label="تاریخ پیشنهادی"><span class="form-note">تاریخ محلی نمایشگاه؛ بازدید مجازی بر اساس UTC.</span></label>
+      <label class="field full">یادداشتی برای همراه آتلیه (اختیاری)<textarea name="note" rows="2" maxlength="1500" placeholder="کمی از فضای خود برایمان بگویید…"></textarea></label><div class="full"><button class="btn" type="submit">درخواست ملاقات ${icon('arrow')}</button></div><p class="form-note full">این درخواست ملاقات است، نه رزرو قطعی. همراه آتلیه تاریخ پیشنهادی شما را بررسی می‌کند.</p>
     </form></div></section>
   </main>
-  <footer class="wrap"><div class="footer-top"><a class="brand" href="#">ATELIER VÉRA<span>THE ART OF THE WOVEN</span></a><p>Beautiful things take time.</p><div class="footer-links"><a href="#archive">The Archive</a><a href="#craft">Our Philosophy</a><a href="#showroom">Get in Touch ${icon('arrow')}</a></div></div><div class="footer-bottom"><span>© ${new Date().getFullYear()} ATELIER VÉRA. All rights reserved.</span><span>CONSIDERED DESIGN. &nbsp; ENDURING CRAFT. &nbsp; A MORE BEAUTIFUL EVERYDAY.</span></div></footer>
+  <footer class="wrap"><div class="footer-top"><a class="brand" href="#">ATELIER VÉRA<span>هنر بافت</span></a><p>زیبایی، شکیبایی می‌طلبد.</p><div class="footer-links"><a href="#archive">آرشیو</a><a href="#craft">نگاه ما</a><a href="#showroom">با ما در تماس باشید ${icon('arrow')}</a></div></div><div class="footer-bottom"><span>© ${new Date().getFullYear()} ATELIER VÉRA. تمامی حقوق محفوظ است.</span><span>طراحی سنجیده. &nbsp; هنر ماندگار. &nbsp; زندگی زیباتر.</span></div></footer>
   <dialog class="inspect-dialog" id="inspect-dialog" aria-labelledby="inspect-title"></dialog>
   <dialog class="folio-dialog" id="folio-dialog" aria-labelledby="folio-title"></dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -116,17 +132,17 @@ function updateBookingDate() {
 }
 
 function renderCatalog() {
-  const filtered = rugs.filter(rug => (!state.style || rug.style === state.style) && (!state.material || rug.material === state.material) && (!state.size || rug.sizes.includes(state.size)) && `${rug.name} ${rug.origin} ${rug.collection} ${rug.style} ${rug.material} ${rug.sku}`.toLowerCase().includes(state.search.toLowerCase().trim()));
+  const filtered = rugs.filter(rug => (!state.style || rug.style === state.style) && (!state.material || rug.material === state.material) && (!state.size || rug.sizes.includes(state.size)) && `${rug.name} ${rug.origin} ${rug.collection} ${rug.style} ${rug.material} ${rug.sku} ${Object.values(rugTranslations[rug.id]).join(' ')}`.toLowerCase().includes(state.search.toLowerCase().trim()));
   if (state.sort === 'low') filtered.sort((a, b) => priceFor(a, state.size || '8x10') - priceFor(b, state.size || '8x10'));
   if (state.sort === 'high') filtered.sort((a, b) => priceFor(b, state.size || '8x10') - priceFor(a, state.size || '8x10'));
   if (state.sort === 'density') filtered.sort((a, b) => b.kpsi - a.kpsi);
   const active = state.style || state.material || state.size || state.search;
   const visible = state.expanded || active || state.sort !== 'featured' ? filtered : filtered.slice(0, 4);
-  $('#result-count').textContent = `Showing ${visible.length} of ${filtered.length} considered pieces`;
-  $('#filter-pills').innerHTML = ['style', 'material', 'size', 'search'].filter(key => state[key]).map(key => `<button class="pill" data-clear="${key}" aria-label="Remove ${escape(state[key])} filter">${escape(key === 'size' ? sizeLabel(state[key]) : state[key])} &nbsp; ×</button>`).join('') + (active ? '<button class="reset" id="reset-filters">Reset Archive</button>' : '');
-  $('#catalog').innerHTML = visible.length ? visible.map((rug, index) => `<article class="rug-card"><div class="rug-picture"><div class="rug-art">${rug.svgPattern(`card-${rug.id}`)}</div>${index === 0 ? '<span class="card-tag">Atelier selection</span>' : ''}<button class="card-save" data-action="add" data-id="${rug.id}" aria-label="Add ${rug.name} to folio">${icon('bag')}</button><div class="quick-actions"><button data-action="inspect" data-id="${rug.id}">${icon('eye')} Inspect weave</button><button data-action="studio" data-id="${rug.id}">${icon('room')} Room studio</button></div></div><div class="card-meta"><span>${rug.style} / ${rug.material}</span><span class="mono">${rug.kpsi} KPSI</span></div><div class="card-bottom"><h3><a href="#inspect" data-action="inspect" data-id="${rug.id}">${rug.name}</a></h3><span>${money(priceFor(rug, state.size || '8x10'))}</span></div><p class="card-origin">${rug.origin} &nbsp; · &nbsp; ${sizeLabel(state.size || '8x10')}</p></article>`).join('') : '<div class="empty">No pieces match this combination.<br><button class="text-link" id="empty-reset">Reset the archive →</button></div>';
+  $('#result-count').textContent = `${persianDigits(visible.length)} بافته از ${persianDigits(filtered.length)} انتخاب`;
+  $('#filter-pills').innerHTML = ['style', 'material', 'size', 'search'].filter(key => state[key]).map(key => `<button class="pill" data-clear="${key}" aria-label="حذف فیلتر ${escape(state[key])}">${escape(key === 'size' ? sizeLabel(state[key]) : key === 'style' ? stylesFa[state[key]] : key === 'material' ? materialsFa[state[key]] : state[key])} &nbsp; ×</button>`).join('') + (active ? '<button class="reset" id="reset-filters">پاک‌کردن فیلترها</button>' : '');
+  $('#catalog').innerHTML = visible.length ? visible.map((rug, index) => `<article class="rug-card"><div class="rug-picture"><div class="rug-art">${rug.svgPattern(`card-${rug.id}`, rugText(rug, 'name'))}</div>${index === 0 ? '<span class="card-tag">گزیده آتلیه</span>' : ''}<button class="card-save" data-action="add" data-id="${rug.id}" aria-label="افزودن ${rugText(rug, 'name')} به فهرست">${icon('bag')}</button><div class="quick-actions"><button data-action="inspect" data-id="${rug.id}">${icon('eye')} مشاهده بافت</button><button data-action="studio" data-id="${rug.id}">${icon('room')} استودیوی فضا</button></div></div><div class="card-meta"><span>${rugText(rug, 'style')} / ${rugText(rug, 'material')}</span><span class="mono">${persianDigits(rug.kpsi)} گره</span></div><div class="card-bottom"><h3><a href="#inspect" data-action="inspect" data-id="${rug.id}">${rugText(rug, 'name')}</a></h3><span>${money(priceFor(rug, state.size || '8x10'))}</span></div><p class="card-origin">${rugText(rug, 'origin')} &nbsp; · &nbsp; ${sizeLabel(state.size || '8x10')}</p></article>`).join('') : '<div class="empty">بافته‌ای با این مشخصات پیدا نشد.<br><button class="text-link" id="empty-reset">پاک‌کردن فیلترها ←</button></div>';
   $('#view-archive').hidden = !!active || state.sort !== 'featured';
-  $('#view-archive').innerHTML = `${state.expanded ? 'Show atelier selections' : 'View the complete archive'} <span class="mono">${state.expanded ? '04' : '10'}</span> ${icon('arrow')}`;
+  $('#view-archive').innerHTML = `${state.expanded ? 'نمایش گزیده‌های آتلیه' : 'مشاهده همه بافته‌ها'} <span class="mono">${state.expanded ? '۰۴' : '۱۰'}</span> ${icon('arrow')}`;
 }
 
 function furniture() {
@@ -142,13 +158,13 @@ function renderStudio() {
   const height = feetHeight * 32;
   const floor = { oak: ['#d8c7a9', '#b6a080'], walnut: ['#715840', '#4f3929'], concrete: ['#bab9b1', '#9c9b94'] }[state.floor];
   $('#room-stage').classList.toggle('evening', state.light === 'evening');
-  $('#room-stage').innerHTML = `<span class="stage-caption">${state.room === 'living' ? 'The living room' : state.room === 'dining' ? 'The dining room' : 'The bedroom'} / A study in proportion</span>
-    <svg class="room" viewBox="0 0 720 560" role="img" aria-label="${rug.name} in a ${escape(state.room)} room on ${escape(state.floor)} flooring, ${sizeLabel(state.studioSize)}, ${state.rotated ? 'rotated 90 degrees, ' : ''}${state.light === 'day' ? 'daylight' : 'evening lighting'}">
+  $('#room-stage').innerHTML = `<span class="stage-caption">${state.room === 'living' ? 'اتاق نشیمن' : state.room === 'dining' ? 'اتاق ناهارخوری' : 'اتاق‌خواب'} / تناسبی سنجیده</span>
+    <svg class="room" viewBox="0 0 720 560" role="img" aria-label="${rugText(rug, 'name')} در ${state.room === 'living' ? 'اتاق نشیمن' : state.room === 'dining' ? 'اتاق ناهارخوری' : 'اتاق‌خواب'} با کف ${state.floor === 'oak' ? 'بلوط' : state.floor === 'walnut' ? 'گردو' : 'بتن'}، اندازه ${sizeLabel(state.studioSize)}، ${state.rotated ? 'چرخش ۹۰ درجه، ' : ''}${state.light === 'day' ? 'نور روز' : 'نور عصر'}">
       <defs><pattern id="floor-grain" width="60" height="560" patternUnits="userSpaceOnUse"><rect width="60" height="560" fill="${floor[0]}"/><path d="M0 0v560M5 0v560M14 0Q35 150 15 280T18 560M40 0Q60 150 45 280T42 560" stroke="${floor[1]}" stroke-opacity=".3" fill="none"/></pattern><filter id="room-shadow"><feDropShadow dx="4" dy="8" stdDeviation="6" flood-color="#302719" flood-opacity=".2"/></filter><linearGradient id="room-light" x2="1" y2=".6"><stop stop-color="${state.light === 'day' ? '#fffbea' : '#ffd38b'}" stop-opacity=".4"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
       <rect width="720" height="560" fill="${state.floor === 'concrete' ? floor[0] : 'url(#floor-grain)'}"/><path d="M42 37h636v486H42Z" fill="none" stroke="${floor[1]}" stroke-opacity=".45" stroke-width="2"/><path d="M45 40h630M45 40v480" stroke="#f7f4ef" stroke-opacity=".45" stroke-width="7"/>
-      <g transform="translate(360 325) rotate(${state.rotated ? 90 : 0})" filter="url(#room-shadow)">${rug.svgPattern('studio-art').replace('<svg ', `<svg x="${-width / 2}" y="${-height / 2}" width="${width}" height="${height}" preserveAspectRatio="none" `)}</g>
+      <g transform="translate(360 325) rotate(${state.rotated ? 90 : 0})" filter="url(#room-shadow)">${rug.svgPattern('studio-art', rugText(rug, 'name')).replace('<svg ', `<svg x="${-width / 2}" y="${-height / 2}" width="${width}" height="${height}" preserveAspectRatio="none" `)}</g>
       ${furniture()}<path d="M42 40H190L430 520H215Z" fill="url(#room-light)" pointer-events="none"/>
-    </svg><div class="stage-scale"><span>0 &nbsp; ── &nbsp; 5 FT</span><span class="mono">${sizeLabel(state.studioSize)} &nbsp; / &nbsp; ${rug.sku}</span></div>`;
+    </svg><div class="stage-scale"><span>۰ &nbsp; ── &nbsp; ۵ فوت</span><span class="mono">${sizeLabel(state.studioSize)} &nbsp; / &nbsp; ${rug.sku}</span></div>`;
 }
 
 function inspect(id, size = state.size || '8x10') {
@@ -156,31 +172,31 @@ function inspect(id, size = state.size || '8x10') {
   if (!rug || !sizes.includes(size)) return;
   state.inspect = rug.id;
   state.inspectSize = size;
-  $('#inspect-dialog').innerHTML = `<button class="icon-btn modal-close" data-close="inspect-dialog" aria-label="Close inspection">${icon('close')}</button><div class="inspect-layout"><div class="inspect-art"><div class="zoom-window"><div class="zoom-art">${rug.svgPattern('inspect-art')}</div></div><button class="zoom-controls" id="zoom" aria-pressed="false">${icon('search')} &nbsp; Explore the weave · Zoom in</button></div><div class="inspect-copy"><div class="eyebrow">${rug.collection}</div><h2 id="inspect-title">${rug.name}</h2><p>${rug.description}</p><dl class="spec-grid"><div><dt>Origin</dt><dd>${rug.origin}</dd></div><div><dt>Knot density</dt><dd class="mono">${rug.kpsi} KPSI</dd></div><div><dt>Pile height</dt><dd class="mono">${rug.pileHeight}</dd></div><div><dt>Time on the loom</dt><dd class="mono">${rug.loomTime}</dd></div><div><dt>Natural fiber</dt><dd>${rug.material}</dd></div><div><dt>Archive reference</dt><dd class="mono">${rug.sku}</dd></div></dl><label class="control-title" for="inspect-size">Choose your dimensions</label><select class="control-select" id="inspect-size">${rug.sizes.map(value => `<option value="${value}" ${value === size ? 'selected' : ''}>${sizeLabel(value)}</option>`).join('')}</select><div class="modal-price"><strong id="inspect-price">${money(priceFor(rug, size))}</strong><span>Estimated archival value · USD</span></div><button class="btn" data-action="add-inspect">${icon('bag')} Add to Inquiry Folio ${icon('arrow')}</button><button class="text-link" data-action="studio" data-id="${rug.id}">See it in the Room Studio ${icon('arrow')}</button></div></div>`;
+  $('#inspect-dialog').innerHTML = `<button class="icon-btn modal-close" data-close="inspect-dialog" aria-label="بستن جزئیات">${icon('close')}</button><div class="inspect-layout"><div class="inspect-art"><div class="zoom-window"><div class="zoom-art">${rug.svgPattern('inspect-art', rugText(rug, 'name'))}</div></div><button class="zoom-controls" id="zoom" aria-pressed="false">${icon('search')} &nbsp; نمایش بافت · بزرگ‌نمایی</button></div><div class="inspect-copy"><div class="eyebrow">${rugText(rug, 'collection')}</div><h2 id="inspect-title">${rugText(rug, 'name')}</h2><p>${rugText(rug, 'description')}</p><dl class="spec-grid"><div><dt>خاستگاه</dt><dd>${rugText(rug, 'origin')}</dd></div><div><dt>تراکم گره</dt><dd class="mono">${persianDigits(rug.kpsi)} گره</dd></div><div><dt>ارتفاع پرز</dt><dd class="mono">${persianDigits(rug.pileHeight)}</dd></div><div><dt>زمان بافت</dt><dd class="mono">${persianDigits(rug.loomTime)}</dd></div><div><dt>الیاف طبیعی</dt><dd>${rugText(rug, 'material')}</dd></div><div><dt>شناسه آرشیو</dt><dd class="mono">${rug.sku}</dd></div></dl><label class="control-title" for="inspect-size">ابعاد دلخواه</label><select class="control-select" id="inspect-size">${rug.sizes.map(value => `<option value="${value}" ${value === size ? 'selected' : ''}>${sizeLabel(value)}</option>`).join('')}</select><div class="modal-price"><strong id="inspect-price">${money(priceFor(rug, size))}</strong><span>ارزش تخمینی آرشیو · دلار آمریکا</span></div><button class="btn" data-action="add-inspect">${icon('bag')} افزودن به فهرست انتخاب ${icon('arrow')}</button><button class="text-link" data-action="studio" data-id="${rug.id}">مشاهده در استودیوی فضا ${icon('arrow')}</button></div></div>`;
   if (!$('#inspect-dialog').open) $('#inspect-dialog').showModal();
 }
 
 function persistFolio() {
-  try { localStorage.setItem('atelier-vera-folio', JSON.stringify(state.folio)); } catch { notify('Your folio is available for this visit. Browser storage is unavailable.'); }
-  $('#folio-count').textContent = state.folio.length;
-  $('.folio-trigger').setAttribute('aria-label', `Inquiry Folio, ${state.folio.length} pieces`);
+  try { localStorage.setItem('atelier-vera-folio', JSON.stringify(state.folio)); } catch { notify('فهرست انتخاب شما فقط برای این بازدید در دسترس است؛ فضای ذخیره‌سازی مرورگر فعال نیست.'); }
+  $('#folio-count').textContent = persianDigits(state.folio.length);
+  $('.folio-trigger').setAttribute('aria-label', `فهرست انتخاب، ${persianDigits(state.folio.length)} بافته`);
 }
 
 function addFolio(id, size) {
   if (!rugs.some(rug => rug.id === id) || !sizes.includes(size)) return;
-  if (state.folio.some(item => item.id === id && item.size === size)) { notify('This piece and size are already in your folio.'); return; }
-  if (state.folio.length >= 50) { notify('Your folio is full. Remove a piece to add another.'); return; }
+  if (state.folio.some(item => item.id === id && item.size === size)) { notify('این بافته با این اندازه از پیش در فهرست شماست.'); return; }
+  if (state.folio.length >= 50) { notify('فهرست شما پُر است؛ برای افزودن بافته‌ای دیگر، یکی را حذف کنید.'); return; }
   state.folio.push({ id, size });
   persistFolio();
-  notify(`${rugs.find(rug => rug.id === id).name} added to your folio.`);
+  notify(`${rugText(rugs.find(rug => rug.id === id), 'name')} به فهرست شما افزوده شد.`);
 }
 
 function renderFolio() {
   const total = state.folio.reduce((sum, item) => sum + priceFor(rugs.find(rug => rug.id === item.id), item.size), 0);
-  $('#folio-dialog').innerHTML = `<button class="icon-btn modal-close" data-close="folio-dialog" aria-label="Close inquiry folio">${icon('close')}</button><div class="eyebrow">A considered collection</div><h2 id="folio-title">Your Inquiry Folio</h2><p>A few pieces worth getting to know.<br>Let us help you bring your selection home.</p><div class="folio-items">${state.folio.length ? state.folio.map((item, index) => {
+  $('#folio-dialog').innerHTML = `<button class="icon-btn modal-close" data-close="folio-dialog" aria-label="بستن فهرست انتخاب">${icon('close')}</button><div class="eyebrow">گزیده‌ای سنجیده</div><h2 id="folio-title">فهرست انتخاب شما</h2><p>چند بافته که ارزش شناختن دارند.<br>برای آوردن انتخابتان به خانه همراه شما هستیم.</p><div class="folio-items">${state.folio.length ? state.folio.map((item, index) => {
     const rug = rugs.find(piece => piece.id === item.id);
-    return `<div class="folio-item"><div class="mini-art">${rug.svgPattern(`folio-${index}`)}</div><div><h3>${rug.name}</h3><p class="mono">${sizeLabel(item.size)} · ${rug.sku}</p><strong>${money(priceFor(rug, item.size))}</strong></div><button data-remove="${index}" aria-label="Remove ${rug.name}">${icon('close')}</button></div>`;
-  }).join('') : '<div class="empty-folio">Your folio is waiting for its first story.<br><button class="text-link" data-close="folio-dialog">Explore the archive →</button></div>'}</div>${state.folio.length ? `<div class="folio-total"><span>Estimated archival value</span><strong>${money(total)}</strong></div><form class="folio-form" id="folio-form"><label class="field">Your name<input name="name" autocomplete="name" required maxlength="100" placeholder="Full name"></label><label class="field">Email address<input name="email" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com"></label><label class="field">Acquisition type<select name="type"><option>Private acquisition</option><option>Trade / Interior design</option></select></label><button class="btn" type="submit">Request a private acquisition ${icon('arrow')}</button><p class="form-note">An inquiry, not a purchase. No payment is collected. Your details are used to respond to your request.</p></form>` : ''}`;
+    return `<div class="folio-item"><div class="mini-art">${rug.svgPattern(`folio-${index}`, rugText(rug, 'name'))}</div><div><h3>${rugText(rug, 'name')}</h3><p class="mono">${sizeLabel(item.size)} · ${rug.sku}</p><strong>${money(priceFor(rug, item.size))}</strong></div><button data-remove="${index}" aria-label="حذف ${rugText(rug, 'name')}">${icon('close')}</button></div>`;
+  }).join('') : '<div class="empty-folio">فهرست شما در انتظار نخستین داستان است.<br><button class="text-link" data-close="folio-dialog">گشت‌وگذار در آرشیو ←</button></div>'}</div>${state.folio.length ? `<div class="folio-total"><span>ارزش تخمینی آرشیو</span><strong>${money(total)}</strong></div><form class="folio-form" id="folio-form"><label class="field">نام شما<input name="name" autocomplete="name" required maxlength="100" placeholder="نام و نام خانوادگی"></label><label class="field">نشانی ایمیل<input name="email" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com"></label><label class="field">نوع درخواست<select name="type"><option value="Private acquisition">خرید خصوصی</option><option value="Trade / Interior design">همکاری تجاری / طراحی داخلی</option></select></label><button class="btn" type="submit">درخواست خرید خصوصی ${icon('arrow')}</button><p class="form-note">این درخواست خرید نیست و پرداختی دریافت نمی‌شود. اطلاعات شما فقط برای پاسخ به درخواستتان استفاده می‌شود.</p></form>` : ''}`;
 }
 
 function selectStudio(id) {
@@ -233,7 +249,7 @@ document.addEventListener('click', event => {
   if (button.id === 'zoom') {
     const zoomed = $('.zoom-art').classList.toggle('zoomed');
     button.setAttribute('aria-pressed', String(zoomed));
-    button.innerHTML = `${icon('search')} &nbsp; ${zoomed ? 'Return to full view · Zoom out' : 'Explore the weave · Zoom in'}`;
+    button.innerHTML = `${icon('search')} &nbsp; ${zoomed ? 'بازگشت به اندازه اصلی · کوچک‌نمایی' : 'نمایش بافت · بزرگ‌نمایی'}`;
   }
   if (room || floor || studioSize || light) {
     const key = room ? 'room' : floor ? 'floor' : studioSize ? 'studioSize' : 'light';
@@ -303,22 +319,22 @@ document.addEventListener('submit', async event => {
   if (pendingRequests[kind]) return;
   if (booking) data.consultation = form.dataset.consultation || 'private';
   else data.selection = state.folio.map(({ id, size }) => ({ id, size }));
-  if (booking && data.date < bookingToday(data.consultation === 'virtual' ? 'Virtual Studio' : data.location)) { updateBookingDate(); notify('Please select today or a future date.'); return; }
+  if (booking && data.date < bookingToday(data.consultation === 'virtual' ? 'Virtual Studio' : data.location)) { updateBookingDate(); notify('لطفاً تاریخ امروز یا روزی در آینده را انتخاب کنید.'); return; }
   const submit = form.querySelector('[type="submit"]');
   pendingRequests[kind] = true;
   if (!booking) $('#folio-dialog').querySelectorAll('[data-remove]').forEach(button => { button.disabled = true; });
   submit.disabled = true;
   const originalLabel = submit.innerHTML;
-  submit.textContent = 'Sending your request…';
+  submit.textContent = 'در حال ارسال درخواست…';
   try {
     const response = await fetch(booking ? '/api/appointments' : '/api/inquiries', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), signal: AbortSignal.timeout(15000) });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Your request could not be sent. Please try again.');
-    const panel = `<span class="success-icon">${icon('check')}</span><h3>${booking ? 'A date with beautiful things.' : 'Your inquiry is received.'}</h3><p>Thank you, ${escape(data.name)}. ${booking ? `Your ${data.consultation === 'virtual' ? 'virtual studio walkthrough' : `private visit in ${escape(data.location)}`} request for <strong>${escape(data.date)}</strong> has been received.` : `Your ${escape(data.type.toLowerCase())} request includes ${data.selection.length} ${data.selection.length === 1 ? 'piece' : 'pieces'}.`}</p><p class="form-note">Reference: <span class="mono">${escape(result.reference)}</span>. ${booking ? 'Your preferred date is subject to concierge confirmation.' : 'No payment has been taken.'}</p>`;
+    if (!response.ok) throw new Error('در ارسال درخواست مشکلی پیش آمد. لطفاً دوباره تلاش کنید.');
+    const panel = `<span class="success-icon">${icon('check')}</span><h3>${booking ? 'قرار ملاقاتی با زیبایی.' : 'درخواست شما دریافت شد.'}</h3><p>سپاس از شما، ${escape(data.name)}. ${booking ? `درخواست ${data.consultation === 'virtual' ? 'گشت مجازی در استودیو' : `بازدید خصوصی در ${escape(data.location)}`} برای تاریخ <strong>${escape(persianDigits(data.date))}</strong> دریافت شد.` : `درخواست «${data.type === 'Private acquisition' ? 'خرید خصوصی' : 'همکاری تجاری / طراحی داخلی'}» شما شامل ${persianDigits(data.selection.length)} بافته است.`}</p><p class="form-note">شناسه پیگیری: <span class="mono">${escape(result.reference)}</span>. ${booking ? 'تاریخ پیشنهادی شما پس از تأیید همراه آتلیه نهایی می‌شود.' : 'پرداختی انجام نشده است.'}</p>`;
     if (booking) $('#booking-content').innerHTML = `<div class="success-panel" role="status">${panel}</div>`;
-    else $('#folio-dialog').innerHTML = `<button class="icon-btn modal-close" data-close="folio-dialog" aria-label="Close inquiry folio">${icon('close')}</button><div class="eyebrow">Your next chapter</div><h2 id="folio-title">A beautiful beginning.</h2><div class="success-panel" role="status">${panel}</div>`;
+    else $('#folio-dialog').innerHTML = `<button class="icon-btn modal-close" data-close="folio-dialog" aria-label="بستن فهرست انتخاب">${icon('close')}</button><div class="eyebrow">آغازی تازه</div><h2 id="folio-title">آغازی زیبا.</h2><div class="success-panel" role="status">${panel}</div>`;
   } catch (error) {
-    notify(error.name === 'TimeoutError' ? 'The request timed out. Please try again.' : error instanceof TypeError ? 'Connection unavailable. Please try again when online.' : error.message);
+    notify(error.name === 'TimeoutError' ? 'زمان ارسال درخواست به پایان رسید. لطفاً دوباره تلاش کنید.' : error instanceof TypeError ? 'اتصال برقرار نشد. لطفاً پس از اتصال دوباره تلاش کنید.' : error.message);
   } finally {
     pendingRequests[kind] = false;
     if (!booking) $('#folio-dialog').querySelectorAll('[data-remove]').forEach(button => { button.disabled = false; });
