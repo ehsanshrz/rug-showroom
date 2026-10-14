@@ -7,6 +7,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../server.js';
 import { rugs, sizes, priceFor } from '../src/rugs.js';
+import { bookingToday } from '../src/booking.js';
+
+test('booking calendar uses consistent showroom dates around UTC midnight', () => {
+  const now = new Date('2026-10-14T01:00:00Z');
+  assert.equal(bookingToday('New York', now), '2026-10-13');
+  assert.equal(bookingToday('Copenhagen', now), '2026-10-14');
+  assert.equal(bookingToday('Milan', now), '2026-10-14');
+  assert.equal(bookingToday('Virtual Studio', now), '2026-10-14');
+});
 
 test('archive contains ten complete, distinct weaves and size prices', () => {
   assert.equal(rugs.length, 10);
@@ -74,4 +83,17 @@ test('API rate limits repeat submissions', async t => {
   const limited = await fetch(url, options);
   assert.equal(limited.status, 429);
   assert.ok(limited.headers.get('Retry-After'));
+});
+
+test('proxy deployments can disable the shared application rate limiter', async t => {
+  const server = createApp({ databasePath: ':memory:', rateLimit: 0 });
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const url = `http://127.0.0.1:${server.address().port}/api/inquiries`;
+  for (let index = 0; index < 12; index++) {
+    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    assert.equal(response.status, 400);
+  }
+  assert.throws(() => createApp({ databasePath: ':memory:', rateLimit: -1 }), /non-negative integer/);
 });

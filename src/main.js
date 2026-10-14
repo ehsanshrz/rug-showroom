@@ -1,5 +1,6 @@
 import './style.css';
 import { rugs, sizes, sizeLabel as formatSize, priceFor, money as formatMoney } from './rugs.js';
+import { bookingToday } from './booking.js';
 
 const icons = {
   arrow: '<path d="M4 12h16m-6-6 6 6-6 6"/>',
@@ -21,6 +22,7 @@ const sizeLabel = value => escape(formatSize(value));
 const money = value => escape(formatMoney(value));
 const $ = selector => document.querySelector(selector);
 const state = { style: '', material: '', size: '', search: '', sort: 'featured', expanded: false, rug: rugs[0].id, room: 'living', floor: 'oak', studioSize: '8x10', rotated: false, light: 'day', inspect: null, inspectSize: '8x10', folio: [] };
+const pendingRequests = { inquiry: false, appointment: false };
 try {
   const saved = JSON.parse(localStorage.getItem('atelier-vera-folio') || '[]');
   if (Array.isArray(saved)) state.folio = saved.filter(item => item && rugs.some(rug => rug.id === item.id) && sizes.includes(item.size)).map(({ id, size }) => ({ id, size })).slice(0, 50);
@@ -97,7 +99,7 @@ $('#app').innerHTML = `
     <section class="wrap section booking" id="showroom"><div class="booking-copy"><div class="eyebrow">By appointment. By your side.</div><h2>A personal invitation<br>to <em>find your piece.</em></h2><p>Feel the fibers. Discover the stories. Join us for a private archival pull, or let our concierge bring the atelier to you through a live studio walkthrough.</p><div class="locations">NEW YORK &nbsp; · &nbsp; COPENHAGEN &nbsp; · &nbsp; MILAN</div></div><div id="booking-content"><form id="booking-form" class="booking-form">
       <div class="full"><span class="control-title">Your consultation</span><div class="segmented"><button type="button" data-consultation="private" class="active" aria-pressed="true">Private showroom visit</button><button type="button" data-consultation="virtual" aria-pressed="false">Virtual studio walkthrough</button></div></div>
       <label class="field">Your name<input name="name" autocomplete="name" placeholder="Full name" required maxlength="100"></label><label class="field">Email address<input name="email" type="email" autocomplete="email" placeholder="you@example.com" required maxlength="254"></label>
-      <label class="field" id="location-field">Your atelier<select name="location"><option>New York</option><option>Copenhagen</option><option>Milan</option></select></label><label class="field">Preferred date<input name="date" type="date" required min="${localDate()}" aria-label="Preferred date"></label>
+      <label class="field" id="location-field">Your atelier<select name="location"><option>New York</option><option>Copenhagen</option><option>Milan</option></select></label><label class="field">Preferred date<input name="date" type="date" required min="${bookingToday('New York')}" aria-label="Preferred date"><span class="form-note">Showroom local date; virtual visits use UTC.</span></label>
       <label class="field full">A note for our concierge (optional)<textarea name="note" rows="2" maxlength="1500" placeholder="Tell us a little about your space…"></textarea></label><div class="full"><button class="btn" type="submit">Request an appointment ${icon('arrow')}</button></div><p class="form-note full">An appointment request, not an instant reservation. Our concierge will review your preferred date.</p>
     </form></div></section>
   </main>
@@ -107,9 +109,10 @@ $('#app').innerHTML = `
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 `;
 
-function localDate() {
-  const date = new Date();
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+function updateBookingDate() {
+  const form = $('#booking-form');
+  const location = form.dataset.consultation === 'virtual' ? 'Virtual Studio' : form.elements.location.value;
+  form.elements.date.min = bookingToday(location);
 }
 
 function renderCatalog() {
@@ -216,7 +219,7 @@ document.addEventListener('click', event => {
   if (action === 'studio') selectStudio(id);
   if (action === 'add') addFolio(id, state.size || '8x10');
   if (action === 'add-inspect') addFolio(state.inspect, state.inspectSize);
-  if (action === 'open-folio') { renderFolio(); $('#folio-dialog').showModal(); }
+  if (action === 'open-folio') { if (!pendingRequests.inquiry) renderFolio(); $('#folio-dialog').showModal(); }
   if (['inspect-dialog', 'folio-dialog'].includes(close)) $(`#${close}`).close();
   if (['style', 'material', 'size', 'search'].includes(clear)) {
     state[clear] = '';
@@ -241,12 +244,13 @@ document.addEventListener('click', event => {
     updatePressed(`[data-${key === 'studioSize' ? 'studio-size' : key}]`, key, key);
     renderStudio();
   }
-  if (remove !== undefined && /^\d+$/.test(remove) && Number(remove) < state.folio.length) { state.folio.splice(Number(remove), 1); persistFolio(); renderFolio(); }
+  if (remove !== undefined && !pendingRequests.inquiry && /^\d+$/.test(remove) && Number(remove) < state.folio.length) { state.folio.splice(Number(remove), 1); persistFolio(); renderFolio(); }
   if (['private', 'virtual'].includes(consultation)) {
     $('#booking-form').dataset.consultation = consultation;
     document.querySelectorAll('[data-consultation]').forEach(item => { item.classList.toggle('active', item === button); item.setAttribute('aria-pressed', String(item === button)); });
     $('#location-field').hidden = consultation === 'virtual';
     $('#location-field select').disabled = consultation === 'virtual';
+    updateBookingDate();
   }
 });
 
@@ -268,6 +272,7 @@ $('#studio-rug').addEventListener('change', event => {
   state.rug = event.target.value;
   renderStudio();
 });
+$('#location-field select').addEventListener('change', updateBookingDate);
 $('#inspect-dialog').addEventListener('change', event => {
   if (event.target.id === 'inspect-size' && sizes.includes(event.target.value)) {
     state.inspectSize = event.target.value;
@@ -291,14 +296,17 @@ document.addEventListener('submit', async event => {
   if (!['booking-form', 'folio-form'].includes(event.target.id)) return;
   event.preventDefault();
   const form = event.target;
-  if (!form.reportValidity() || form.dataset.pending) return;
+  if (!form.reportValidity()) return;
   const data = Object.fromEntries(new FormData(form));
   const booking = form.id === 'booking-form';
-  if (booking && data.date < localDate()) { notify('Please select today or a future date.'); return; }
+  const kind = booking ? 'appointment' : 'inquiry';
+  if (pendingRequests[kind]) return;
   if (booking) data.consultation = form.dataset.consultation || 'private';
   else data.selection = state.folio.map(({ id, size }) => ({ id, size }));
+  if (booking && data.date < bookingToday(data.consultation === 'virtual' ? 'Virtual Studio' : data.location)) { updateBookingDate(); notify('Please select today or a future date.'); return; }
   const submit = form.querySelector('[type="submit"]');
-  form.dataset.pending = 'true';
+  pendingRequests[kind] = true;
+  if (!booking) $('#folio-dialog').querySelectorAll('[data-remove]').forEach(button => { button.disabled = true; });
   submit.disabled = true;
   const originalLabel = submit.innerHTML;
   submit.textContent = 'Sending your request…';
@@ -312,7 +320,8 @@ document.addEventListener('submit', async event => {
   } catch (error) {
     notify(error.name === 'TimeoutError' ? 'The request timed out. Please try again.' : error instanceof TypeError ? 'Connection unavailable. Please try again when online.' : error.message);
   } finally {
-    delete form.dataset.pending;
+    pendingRequests[kind] = false;
+    if (!booking) $('#folio-dialog').querySelectorAll('[data-remove]').forEach(button => { button.disabled = false; });
     submit.disabled = false;
     submit.innerHTML = originalLabel;
   }

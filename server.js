@@ -6,6 +6,7 @@ import { dirname, resolve, extname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { rugs, sizes, priceFor } from './src/rugs.js';
+import { bookingToday } from './src/booking.js';
 
 const root = dirname(fileURLToPath(import.meta.url));
 const contentTypes = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.txt': 'text/plain; charset=utf-8' };
@@ -26,12 +27,12 @@ function validateRequest(body, booking) {
   if (booking) {
     const date = text('date', 10);
     const consultation = text('consultation', 20);
-    const today = new Date().toISOString().slice(0, 10);
-    const parsed = new Date(`${date}T12:00:00Z`);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date || date < today) throw new Error('Please choose a valid date today or in the future.');
     if (!['private', 'virtual'].includes(consultation)) throw new Error('Please choose a consultation type.');
     const location = consultation === 'virtual' ? 'Virtual Studio' : text('location', 30);
     if (consultation === 'private' && !locations.includes(location)) throw new Error('Please choose a showroom.');
+    const today = bookingToday(location);
+    const parsed = new Date(`${date}T12:00:00Z`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date || date < today) throw new Error('Please choose a valid date today or in the future.');
     return { name, email, date, consultation, location, note: text('note', 1500, false) };
   }
   const type = text('type', 30);
@@ -49,7 +50,8 @@ function validateRequest(body, booking) {
   return { name, email, type, selection, total: selection.reduce((sum, item) => sum + item.price, 0) };
 }
 
-export function createApp({ databasePath = resolve(root, 'data/requests.sqlite'), publicOrigin = process.env.PUBLIC_ORIGIN, distPath = resolve(root, 'dist'), rateLimit = 10 } = {}) {
+export function createApp({ databasePath = resolve(root, 'data/requests.sqlite'), publicOrigin = process.env.PUBLIC_ORIGIN, distPath = resolve(root, 'dist'), rateLimit = Number(process.env.REQUEST_RATE_LIMIT ?? 10) } = {}) {
+  if (!Number.isSafeInteger(rateLimit) || rateLimit < 0) throw new Error('REQUEST_RATE_LIMIT must be a non-negative integer.');
   const allowedOrigin = publicOrigin ? new URL(publicOrigin).origin : null;
   if (databasePath !== ':memory:') mkdirSync(dirname(databasePath), { recursive: true, mode: 0o700 });
   const database = new DatabaseSync(databasePath);
@@ -80,15 +82,17 @@ export function createApp({ databasePath = resolve(root, 'data/requests.sqlite')
       if (request.method !== 'POST') { response.setHeader('Allow', 'POST'); json(response, 405, { error: 'Only POST requests are accepted.' }); return; }
       if (request.headers['sec-fetch-site'] === 'cross-site' || (allowedOrigin && request.headers.origin && request.headers.origin !== allowedOrigin)) { json(response, 403, { error: 'Requests must originate from this showroom.' }); return; }
       if (!(request.headers['content-type'] || '').startsWith('application/json')) { json(response, 415, { error: 'Please send JSON.' }); return; }
-      const ip = request.socket.remoteAddress;
-      const now = Date.now();
-      let entry = attempts.get(ip);
-      if (!entry || entry.until < now) {
-        if (attempts.size >= 10000 && !attempts.has(ip)) { json(response, 503, { error: 'The showroom is busy. Please try again shortly.' }); return; }
-        entry = { count: 0, until: now + 15 * 60_000 };
-        attempts.set(ip, entry);
+      if (rateLimit > 0) {
+        const ip = request.socket.remoteAddress;
+        const now = Date.now();
+        let entry = attempts.get(ip);
+        if (!entry || entry.until < now) {
+          if (attempts.size >= 10000 && !attempts.has(ip)) { json(response, 503, { error: 'The showroom is busy. Please try again shortly.' }); return; }
+          entry = { count: 0, until: now + 15 * 60_000 };
+          attempts.set(ip, entry);
+        }
+        if (++entry.count > rateLimit) { response.setHeader('Retry-After', String(Math.ceil((entry.until - now) / 1000))); json(response, 429, { error: 'Too many requests. Please try again in 15 minutes.' }); return; }
       }
-      if (++entry.count > rateLimit) { response.setHeader('Retry-After', String(Math.ceil((entry.until - now) / 1000))); json(response, 429, { error: 'Too many requests. Please try again in 15 minutes.' }); return; }
       try {
         let bytes = 0;
         const chunks = [];

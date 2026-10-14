@@ -18,7 +18,9 @@ Open `http://localhost:3000`. For development, run `npm run dev:api` and `npm ru
 
 The Node server validates and durably stores inquiry and appointment requests in SQLite, returning a receipt reference only after a successful database write. Prices are recalculated from the archive on the server. Appointments are requests, not confirmed reservations. No payments or automated emails are sent.
 
-Set `PUBLIC_ORIGIN` to the public HTTPS origin in production, place the app behind an HTTPS reverse proxy, and set `DATABASE_PATH` to a private, persistent volume outside the web root. `PORT` defaults to 3000; `HOST` defaults to `0.0.0.0`. The server includes JSON size limits, per-connection-IP rate limiting, security headers, and cross-site request rejection. Behind a reverse proxy, enforce per-client rate limits at that proxy; forwarded IP headers are deliberately not trusted.
+Set `PUBLIC_ORIGIN` to the public HTTPS origin in production, place the app behind an HTTPS reverse proxy, and set `DATABASE_PATH` to a private, persistent volume outside the web root. `PORT` defaults to 3000; `HOST` defaults to `0.0.0.0`. The server includes JSON size limits, per-connection-IP rate limiting, security headers, and cross-site request rejection. `REQUEST_RATE_LIMIT` defaults to 10 requests per 15 minutes per connection IP. Behind a reverse proxy, enforce per-client rate limits at that proxy and set `REQUEST_RATE_LIMIT=0` to disable the shared application counter; do not expose the Node server directly in this configuration. Forwarded IP headers are deliberately not trusted.
+
+Booking dates use the selected showroom's local calendar (New York, Copenhagen, or Milan); virtual requests use UTC. The frontend and API share the same date calculation.
 
 Requests are not exposed through a public read API. Authorized operators can query the `requests` table with SQLite tooling (`reference`, `kind`, `created_at`, `payload`) to follow up with clients. Back up the database securely and implement an appropriate retention policy for personal information. Browser storage holds only folio piece IDs and dimensions, not contact details.
 
