@@ -14,6 +14,10 @@ npm start
 
 Open `http://localhost:3000`. For development, run `npm run dev:api` and `npm run dev` in separate terminals; Vite proxies form submissions to the API on port 3000. `npm run preview` serves only the frontend; use `npm start` to exercise submissions.
 
+## GitHub Pages
+
+The site is built and deployed to GitHub Pages from `main` by the `Deploy to GitHub Pages` workflow. Set the repository's Pages source to **GitHub Actions**. GitHub Pages hosts only the static frontend; inquiry and appointment submissions require the Node server and are not available on Pages.
+
 ## Requests and deployment
 
 The Node server validates and durably stores inquiry and appointment requests in SQLite, returning a receipt reference only after a successful database write. Prices are recalculated from the archive on the server. Appointments are requests, not confirmed reservations. No payments or automated emails are sent.
