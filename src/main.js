@@ -26,8 +26,22 @@ try {
 let toastTimer;
 function notify(message) {
   $('#toast').textContent = message;
+  const dialog = $('dialog[open]');
+  if (dialog) {
+    let feedback = dialog.querySelector('.dialog-feedback');
+    if (!feedback) {
+      feedback = document.createElement('div');
+      feedback.className = 'toast dialog-feedback';
+      feedback.setAttribute('role', 'status');
+      dialog.append(feedback);
+    }
+    feedback.textContent = message;
+  }
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { $('#toast').textContent = ''; }, 4000);
+  toastTimer = setTimeout(() => {
+    $('#toast').textContent = '';
+    document.querySelectorAll('.dialog-feedback').forEach(element => element.remove());
+  }, 4000);
 }
 
 function heroRoom() {
