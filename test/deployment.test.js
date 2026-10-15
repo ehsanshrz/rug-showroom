@@ -14,12 +14,15 @@ test('source entrypoint assets resolve under the GitHub Pages project path', asy
   const html = await readFile(join(root, 'index.html'), 'utf8');
   const css = await readFile(join(root, 'src/style.css'), 'utf8');
   const main = await readFile(join(root, 'src/main.js'), 'utf8');
-  assert.match(html, /href="\.\/favicon\.svg"/);
-  assert.match(html, /href="\.\/fonts\/cormorant-garamond\.ttf"/);
+  assert.match(html, /href="\.\/src\/assets\/favicon\.svg"/);
+  assert.match(html, /href="\.\/src\/assets\/fonts\/cormorant-garamond\.ttf"/);
   assert.match(html, /href="\.\/src\/style\.css"/);
   assert.match(html, /src="\.\/src\/main\.js"/);
   assert.doesNotMatch(main, /import ['"]\.\/style\.css['"]/);
-  assert.equal([...css.matchAll(/url\(["']?\.\.\/fonts\/[^"')]+\.ttf["']?\)/g)].length, 4);
+  assert.equal([...css.matchAll(/url\(["']?\.\/assets\/fonts\/[^"')]+\.ttf["']?\)/g)].length, 4);
+  for (const path of ['src/assets/favicon.svg', 'src/assets/fonts/cormorant-garamond.ttf']) {
+    assert.ok((await stat(join(root, path))).isFile(), `Missing source asset: ${path}`);
+  }
 });
 
 for (const [githubActions, base] of [['false', '/'], ['true', '/rug-showroom/']]) {
