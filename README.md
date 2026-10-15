@@ -18,7 +18,7 @@ Open `http://localhost:3000`. For development, run `npm run dev:api` and `npm ru
 
 The site is built and deployed to GitHub Pages from `main` by the `Deploy to GitHub Pages` workflow. Set the repository's Pages source to **GitHub Actions**. GitHub Pages hosts only the static frontend; inquiry and appointment submissions require the Node server and are not available on Pages.
 
-If the page is blank and `/src/main.js` or `/fonts/cormorant-garamond.ttf` returns 404, Pages may be publishing the source files with Jekyll instead of the Vite build. Run **Actions → Deploy to GitHub Pages → Run workflow → main** after merging changes. The workflow selects GitHub Actions publishing and uploads only `dist`, with asset URLs prefixed by `/rug-showroom/`. Do not rerun the separate **pages build and deployment** Jekyll workflow; it can replace the built site with unbuilt source files. Once deployment succeeds, hard-refresh https://ehsanshrz.github.io/rug-showroom/.
+If the page is blank and `/src/main.js` or `/fonts/cormorant-garamond.ttf` returns 404, Pages may be publishing the source files with Jekyll instead of the Vite build. A repository administrator must select **Settings → Pages → Build and deployment → Source → GitHub Actions**, then run **Actions → Deploy to GitHub Pages → Run workflow → main** after merging changes. The workflow checks this setting and uploads only `dist`, with asset URLs prefixed by `/rug-showroom/`. Do not rerun the separate **pages build and deployment** Jekyll workflow; it can replace the built site with unbuilt source files. Once deployment succeeds, hard-refresh https://ehsanshrz.github.io/rug-showroom/.
 
 ## Requests and deployment
 
