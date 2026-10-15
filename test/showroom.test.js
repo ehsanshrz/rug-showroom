@@ -8,6 +8,12 @@ import { join } from 'node:path';
 import { createApp } from '../server.js';
 import { rugs, sizes, priceFor } from '../src/rugs.js';
 import { bookingToday } from '../src/booking.js';
+import { translate } from '../src/translations.js';
+
+test('showroom copy can be displayed in English or Farsi', () => {
+  assert.equal(translate('گزیده‌هایی با داستان‌های ماندگار', 'en'), 'Considered pieces, enduring stories');
+  assert.equal(translate('گزیده‌هایی با داستان‌های ماندگار', 'fa'), 'گزیده‌هایی با داستان‌های ماندگار');
+});
 
 test('booking calendar uses consistent showroom dates around UTC midnight', () => {
   const now = new Date('2026-10-14T01:00:00Z');
