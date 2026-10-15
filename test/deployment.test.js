@@ -10,6 +10,18 @@ import { promisify } from 'node:util';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const exec = promisify(execFile);
 
+test('source entrypoint assets resolve under the GitHub Pages project path', async () => {
+  const html = await readFile(join(root, 'index.html'), 'utf8');
+  const css = await readFile(join(root, 'src/style.css'), 'utf8');
+  const main = await readFile(join(root, 'src/main.js'), 'utf8');
+  assert.match(html, /href="\.\/favicon\.svg"/);
+  assert.match(html, /href="\.\/fonts\/cormorant-garamond\.ttf"/);
+  assert.match(html, /href="\.\/src\/style\.css"/);
+  assert.match(html, /src="\.\/src\/main\.js"/);
+  assert.doesNotMatch(main, /import ['"]\.\/style\.css['"]/);
+  assert.equal([...css.matchAll(/url\(["']?\.\.\/fonts\/[^"')]+\.ttf["']?\)/g)].length, 4);
+});
+
 for (const [githubActions, base] of [['false', '/'], ['true', '/rug-showroom/']]) {
   test(`production build serves scripts, styles, and fonts under ${base}`, async t => {
     const directory = await mkdtemp(join(tmpdir(), 'atelier-vera-build-'));

@@ -1,4 +1,3 @@
-import './style.css';
 import { rugs, sizes, sizeLabel as formatSize, priceFor } from './rugs.js';
 import { bookingToday } from './booking.js';
 
