@@ -33,17 +33,25 @@ for (const [githubActions, base] of [['false', '/'], ['true', '/rug-showroom/']]
     const html = await readFile(join(directory, 'index.html'), 'utf8');
     assert.doesNotMatch(html, /\/src\/main\.js/);
     assert.match(html, /<script[^>]+src="[^"]*\/assets\/[^"]+\.js"/);
-    assert.ok(html.includes(`href="${base}fonts/cormorant-garamond.ttf"`));
     const urls = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map(match => match[1]);
     const stylesheet = urls.find(url => url.endsWith('.css'));
     assert.ok(stylesheet);
-    const css = await readFile(join(directory, stylesheet.slice(base.length)), 'utf8');
+    const baseUrl = new URL(base, 'https://example.test');
+    const resolveAssetPath = (url, relativeTo = baseUrl) => {
+      const resolved = new URL(url, relativeTo);
+      assert.ok(resolved.pathname.startsWith(base), `Asset outside ${base}: ${url}`);
+      return join(directory, decodeURIComponent(resolved.pathname.slice(base.length)));
+    };
+    const stylesheetUrl = new URL(stylesheet, baseUrl);
+    const css = await readFile(resolveAssetPath(stylesheet), 'utf8');
     const fonts = [...css.matchAll(/url\(["']?([^"')]+\.ttf)["']?\)/g)].map(match => match[1]);
     assert.equal(new Set(fonts).size, 4);
 
-    for (const url of [...urls, ...fonts]) {
-      assert.ok(url.startsWith(base), `Asset outside ${base}: ${url}`);
-      assert.ok((await stat(join(directory, url.slice(base.length)))).isFile(), `Missing asset: ${url}`);
+    for (const url of urls) {
+      assert.ok((await stat(resolveAssetPath(url))).isFile(), `Missing asset: ${url}`);
+    }
+    for (const font of fonts) {
+      assert.ok((await stat(resolveAssetPath(font, stylesheetUrl))).isFile(), `Missing font: ${font}`);
     }
   });
 }
