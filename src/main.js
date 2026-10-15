@@ -168,8 +168,9 @@ function setLanguage(language) {
   $('#language-toggle').setAttribute('aria-label', language === 'fa' ? 'Switch language to English' : 'تغییر زبان به فارسی');
   $('#studio-rug').innerHTML = rugs.map(rug => `<option value="${rug.id}">${rugText(rug, 'name')}</option>`).join('');
   $('#studio-rug').value = state.rug;
-  translatePage();
-  setLanguage(state.language);
+  renderCatalog();
+  renderStudio();
+  persistFolio();
   if ($('#inspect-dialog').open) inspect(state.inspect, state.inspectSize);
   if ($('#folio-dialog').open) renderFolio();
 }
@@ -402,6 +403,4 @@ document.addEventListener('submit', async event => {
   }
 });
 
-renderCatalog();
-renderStudio();
-persistFolio();
+setLanguage(state.language);
