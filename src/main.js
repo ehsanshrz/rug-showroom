@@ -166,10 +166,10 @@ function setLanguage(language) {
     : 'Atelier Véra: a considered archive of handwoven rugs. Preview exceptional weaves in your space and request a private consultation.';
   $('#language-toggle').textContent = language === 'fa' ? 'English' : 'فارسی';
   $('#language-toggle').setAttribute('aria-label', language === 'fa' ? 'Switch language to English' : 'تغییر زبان به فارسی');
+  $('#studio-rug').innerHTML = rugs.map(rug => `<option value="${rug.id}">${rugText(rug, 'name')}</option>`).join('');
+  $('#studio-rug').value = state.rug;
   translatePage();
-  renderCatalog();
-  renderStudio();
-  persistFolio();
+  setLanguage(state.language);
   if ($('#inspect-dialog').open) inspect(state.inspect, state.inspectSize);
   if ($('#folio-dialog').open) renderFolio();
 }
@@ -306,7 +306,7 @@ document.addEventListener('click', event => {
   if (button.id === 'zoom') {
     const zoomed = $('.zoom-art').classList.toggle('zoomed');
     button.setAttribute('aria-pressed', String(zoomed));
-    button.innerHTML = `${icon('search')} &nbsp; ${zoomed ? 'بازگشت به اندازه اصلی · کوچک‌نمایی' : 'نمایش بافت · بزرگ‌نمایی'}`;
+    button.innerHTML = `${icon('search')} &nbsp; ${state.language === 'fa' ? zoomed ? 'بازگشت به اندازه اصلی · کوچک‌نمایی' : 'نمایش بافت · بزرگ‌نمایی' : zoomed ? 'Return to original size · zoom out' : 'View texture · zoom in'}`;
   }
   if (room || floor || studioSize || light) {
     const key = room ? 'room' : floor ? 'floor' : studioSize ? 'studioSize' : 'light';
@@ -352,6 +352,7 @@ $('#inspect-dialog').addEventListener('change', event => {
     $('#inspect-price').textContent = money(priceFor(rugs.find(rug => rug.id === state.inspect), state.inspectSize));
   }
 });
+$('#language-toggle').addEventListener('click', () => setLanguage(state.language === 'fa' ? 'en' : 'fa'));
 $('.mobile-menu').addEventListener('click', event => {
   const open = $('.nav').classList.toggle('open');
   event.currentTarget.setAttribute('aria-expanded', String(open));
@@ -390,6 +391,7 @@ document.addEventListener('submit', async event => {
     const panel = `<span class="success-icon">${icon('check')}</span><h3>${booking ? 'قرار ملاقاتی با زیبایی.' : 'درخواست شما دریافت شد.'}</h3><p>سپاس از شما، ${escape(data.name)}. ${booking ? `درخواست ${data.consultation === 'virtual' ? 'گشت مجازی در استودیو' : `بازدید خصوصی در ${escape(data.location)}`} برای تاریخ <strong>${escape(persianDigits(data.date))}</strong> دریافت شد.` : `درخواست «${data.type === 'Private acquisition' ? 'خرید خصوصی' : 'همکاری تجاری / طراحی داخلی'}» شما شامل ${persianDigits(data.selection.length)} بافته است.`}</p><p class="form-note">شناسه پیگیری: <span class="mono">${escape(result.reference)}</span>. ${booking ? 'تاریخ پیشنهادی شما پس از تأیید همراه آتلیه نهایی می‌شود.' : 'پرداختی انجام نشده است.'}</p>`;
     if (booking) $('#booking-content').innerHTML = `<div class="success-panel" role="status">${panel}</div>`;
     else $('#folio-dialog').innerHTML = `<button class="icon-btn modal-close" data-close="folio-dialog" aria-label="بستن فهرست انتخاب">${icon('close')}</button><div class="eyebrow">آغازی تازه</div><h2 id="folio-title">آغازی زیبا.</h2><div class="success-panel" role="status">${panel}</div>`;
+    translatePage();
   } catch (error) {
     notify(error.name === 'TimeoutError' ? 'زمان ارسال درخواست به پایان رسید. لطفاً دوباره تلاش کنید.' : error instanceof TypeError ? 'اتصال برقرار نشد. لطفاً پس از اتصال دوباره تلاش کنید.' : error.message);
   } finally {
