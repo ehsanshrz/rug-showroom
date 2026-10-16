@@ -53,6 +53,12 @@ function validateRequest(body, booking) {
 export function createApp({ databasePath = resolve(root, 'data/requests.sqlite'), publicOrigin = process.env.PUBLIC_ORIGIN, distPath = resolve(root, 'dist'), rateLimit = Number(process.env.REQUEST_RATE_LIMIT ?? 10) } = {}) {
   if (!Number.isSafeInteger(rateLimit) || rateLimit < 0) throw new Error('REQUEST_RATE_LIMIT must be a non-negative integer.');
   const allowedOrigin = publicOrigin ? new URL(publicOrigin).origin : null;
+  const exchangeSources = ["'self'", 'https://open.er-api.com'];
+  if (process.env.VITE_ALANCHAND_ENDPOINT) {
+    const endpoint = new URL(process.env.VITE_ALANCHAND_ENDPOINT, 'https://showroom.invalid');
+    if (endpoint.protocol !== 'https:') throw new Error('The AlanChand adapter must use HTTPS or a same-origin path.');
+    if (endpoint.origin !== 'https://showroom.invalid') exchangeSources.push(endpoint.origin);
+  }
   if (databasePath !== ':memory:') mkdirSync(dirname(databasePath), { recursive: true, mode: 0o700 });
   const database = new DatabaseSync(databasePath);
   if (databasePath !== ':memory:') chmodSync(databasePath, 0o600);
@@ -74,7 +80,7 @@ export function createApp({ databasePath = resolve(root, 'data/requests.sqlite')
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     response.setHeader('X-Frame-Options', 'DENY');
-    response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
+    response.setHeader('Content-Security-Policy', `default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src ${exchangeSources.join(' ')}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'`);
     let path;
     try { path = decodeURIComponent(new URL(request.url, 'http://localhost').pathname); } catch { json(response, 400, { error: 'Invalid URL.' }); return; }
     if (path.startsWith('/api/')) {
