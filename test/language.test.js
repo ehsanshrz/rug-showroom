@@ -25,6 +25,8 @@ for (const open of [false, true]) {
       renderCatalog: () => calls.push('catalog'),
       renderStudio: () => calls.push('studio'),
       persistFolio: () => calls.push('folio'),
+      specText: value => value,
+      updateCurrencyUI: () => {},
       inspect: (...args) => calls.push(['inspect', ...args]),
       renderFolio: () => calls.push('dialog'),
     });

@@ -11,10 +11,31 @@ const records = [
   ['linen', 'The Linen Ground', 'Quiet Essentials', 'Jaipur, India', 'Minimalist', 'Jute', 1900, 55, '4 mm', '2 months', 'A restrained checkerboard of natural fibers. Subtle tonal contrast celebrates the raw beauty of the material and the hand of the maker.', ['#d8c8aa', '#b9a889', '#e5d9c3', '#cabb9e'], 'check'],
 ];
 
-export const sizes = ['8x10', '9x12', '10x14'];
-export const sizeLabel = size => size.replace('x', '′ × ') + '′';
-export const priceFor = (rug, size) => Math.round(rug.price * ({ '8x10': 1, '9x12': 1.35, '10x14': 1.75 }[size] || 1));
+export const dimensions = {
+  '8x10': [2.4384, 3.048],
+  '9x12': [2.7432, 3.6576],
+  '10x14': [3.048, 4.2672],
+  runner: [0.8, 3],
+  '2x3m': [2, 3],
+  '3x4m': [3, 4],
+};
+export const sizes = Object.keys(dimensions);
+export const sizeLabel = size => size === 'runner' ? '0.8 × 3 m (Runner)' : size.endsWith('m') ? size.slice(0, -1).replace('x', ' × ') + ' m' : size.replace('x', '′ × ') + '′';
+export const priceFor = (rug, size) => Math.round(rug.price * ({ '8x10': 1, '9x12': 1.35, '10x14': 1.75 }[size] || (dimensions[size] ? dimensions[size][0] * dimensions[size][1] / (2.4384 * 3.048) : 1)));
 export const money = value => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+
+const specifications = [
+  ['Classic', 'Terracotta', 'Cotton', 'Hand-spun wool', 'Vegetable dyes', 'Vintage-inspired new'],
+  ['Tribal / Nomadic', 'Ivory', 'Wool', 'Mountain wool', 'Undyed / natural tones', 'New'],
+  ['Modern / Vintage', 'Sand', 'Cotton', 'Wool', 'Contemporary dyes', 'New'],
+  ['Classic', 'Terracotta', 'Silk', '100% pure silk', 'Natural dyes', 'Masterpiece new'],
+  ['Modern / Vintage', 'Sand', 'Jute', 'Jute', 'Undyed', 'New'],
+  ['Tribal / Nomadic', 'Terracotta', 'Wool', 'Wool flatweave', 'Vegetable dyes', 'Vintage-inspired new'],
+  ['Modern / Vintage', 'Sand', 'Cotton', 'Silk', 'Contemporary dyes', 'New'],
+  ['Tribal / Nomadic', 'Olive', 'Wool', 'Wool', 'Natural dyes', 'New'],
+  ['Classic', 'Blush', 'Cotton', 'Kork wool', 'Vegetable dyes', 'Antique-inspired new'],
+  ['Modern / Vintage', 'Ivory', 'Jute', 'Jute', 'Undyed', 'New'],
+];
 
 function pattern(type, c) {
   if (type === 'diamond' || type === 'kilim') {
@@ -31,6 +52,15 @@ function pattern(type, c) {
 
 export const rugs = records.map(([id, name, collection, origin, style, material, price, kpsi, pileHeight, loomTime, description, colors, motif], index) => ({
   id, sku: `AV-${String(index + 1).padStart(3, '0')}`, name, collection, origin, style, material, sizes: [...sizes], price, kpsi, pileHeight, loomTime, description,
+  city: origin.split(',')[0],
+  category: specifications[index][0],
+  dominantColor: specifications[index][1],
+  foundation: specifications[index][2],
+  pile: specifications[index][3],
+  dye: specifications[index][4],
+  condition: specifications[index][5],
+  flatweave: ['sahara', 'kars', 'linen'].includes(id),
+  illustrative: true,
   svgPattern(prefix = id, label = `${name} handwoven rug`) {
     const artwork = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 440" role="img" aria-label="${label}">
       <defs>${pattern(motif, colors)}<pattern id="weft" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 1H4M1 0V4" stroke="#342719" stroke-opacity=".13" stroke-width=".6"/><path d="M0 3H4" stroke="#fff" stroke-opacity=".17" stroke-width=".6"/></pattern><pattern id="fringe" width="5" height="12" patternUnits="userSpaceOnUse"><path d="M2 0 1 12M3 0 4 11" stroke="${colors[2]}" stroke-width="1.5"/></pattern></defs>
