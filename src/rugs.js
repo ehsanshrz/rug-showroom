@@ -12,6 +12,7 @@ const records = [
 ];
 
 export const dimensions = {
+  '5x8': [1.524, 2.4384],
   '8x10': [2.4384, 3.048],
   '9x12': [2.7432, 3.6576],
   '10x14': [3.048, 4.2672],
@@ -61,6 +62,7 @@ export const rugs = records.map(([id, name, collection, origin, style, material,
   condition: specifications[index][5],
   flatweave: ['sahara', 'kars', 'linen'].includes(id),
   illustrative: true,
+  arrivalOrder: index + 1,
   svgPattern(prefix = id, label = `${name} handwoven rug`) {
     const artwork = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 440" role="img" aria-label="${label}">
       <defs>${pattern(motif, colors)}<pattern id="weft" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 1H4M1 0V4" stroke="#342719" stroke-opacity=".13" stroke-width=".6"/><path d="M0 3H4" stroke="#fff" stroke-opacity=".17" stroke-width=".6"/></pattern><pattern id="fringe" width="5" height="12" patternUnits="userSpaceOnUse"><path d="M2 0 1 12M3 0 4 11" stroke="${colors[2]}" stroke-width="1.5"/></pattern></defs>

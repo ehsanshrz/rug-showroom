@@ -2,6 +2,17 @@
 
 A responsive rug showroom with ten original SVG weaves, combinable archive filters, a live architectural room studio, zoomable specifications, a persistent inquiry folio, and private or virtual consultation requests.
 
+## Boutique showroom experience
+
+- Linen/alabaster surfaces, charcoal craft storytelling, locally bundled editorial typography, a private-viewing announcement and collection menu, and a persistent consultation CTA.
+- Mobile-collapsible discovery controls combine origin, style, material, sizes (including 5 × 8 ft), color swatches, search and curated edits. Active badges, clear-all and counts stay synchronized. The Indigo and Charcoal swatches correctly return an empty state when no matching demo inventory exists.
+- Sort by price, arrival order, largest available dimensions or knot density. Demo arrival order is illustrative, not a verified acquisition date. All demo rugs offer the same sizes, so size sorting preserves their order; flatweaves appear after knotted pieces when sorting by knot density.
+- Portrait cards have lazy-loaded local artwork, reserved dimensions and shimmer placeholders, with an in-room hover preview on pointer devices. Touch and keyboard visitors can use the visible detail/studio actions.
+- Product inspection includes full layout, room, illustrative reverse and cropped fringe views, a keyboard/touch magnifier, and metric/imperial dimensions. Room previews update with the selected size.
+- Product-specific viewing and high-resolution video/swatch requests open a contact/date/time form. Requests use the existing appointment API; SKU, selected size, request purpose and preferred local time are stored in the appointment note. Media requests use the date/time as a preferred follow-up. A receipt appears only after storage succeeds; no video, swatch shipment or appointment is automatically fulfilled.
+
+The archive remains a **clearly labeled illustration-based product demo**, not photographic evidence of actual stock. Reverse views are generic weave illustrations, not authenticated rug backs. Replace artwork with owned/licensed full, room, reverse and fringe photography and verify inventory and shipping/showroom claims before pitching a live retailer deployment. WhatsApp requires the gallery configuration below; static GitHub Pages cannot receive lead forms without an API deployment.
+
 ## Currency and VIP gallery integration
 
 - `src/currencyService.js` normalizes USD-based prices into USD, EUR, AED, TRY, CAD and **IRT (toman)**. One toman is ten Iranian rials; IRR is never silently treated as IRT.
