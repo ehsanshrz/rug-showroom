@@ -155,24 +155,29 @@ function translatePage() {
 }
 
 function setLanguage(language) {
-  if (!['fa', 'en'].includes(language)) return;
-  state.language = language;
-  try { localStorage.setItem('atelier-vera-language', language); } catch {}
-  document.documentElement.lang = language;
-  document.documentElement.dir = language === 'fa' ? 'rtl' : 'ltr';
-  document.title = language === 'fa' ? 'آتلیه ورا | نمایشگاه قالی' : 'Atelier Véra | Rug Showroom';
-  document.querySelector('meta[name="description"]').content = language === 'fa'
-    ? 'آتلیه ورا؛ آرشیوی گزیده از قالی‌های دست‌بافت. بافته‌هایی استثنایی را در فضای خود بیازمایید و برای مشاوره خصوصی وقت بگیرید.'
-    : 'Atelier Véra: a considered archive of handwoven rugs. Preview exceptional weaves in your space and request a private consultation.';
-  $('#language-toggle').textContent = language === 'fa' ? 'English' : 'فارسی';
-  $('#language-toggle').setAttribute('aria-label', language === 'fa' ? 'Switch language to English' : 'تغییر زبان به فارسی');
-  $('#studio-rug').innerHTML = rugs.map(rug => `<option value="${rug.id}">${rugText(rug, 'name')}</option>`).join('');
-  $('#studio-rug').value = state.rug;
-  renderCatalog();
-  renderStudio();
-  persistFolio();
-  if ($('#inspect-dialog').open) inspect(state.inspect, state.inspectSize);
-  if ($('#folio-dialog').open) renderFolio();
+  if (!['fa', 'en'].includes(language) || setLanguage.isUpdating) return;
+  setLanguage.isUpdating = true;
+  try {
+    state.language = language;
+    try { localStorage.setItem('atelier-vera-language', language); } catch {}
+    document.documentElement.lang = language;
+    document.documentElement.dir = language === 'fa' ? 'rtl' : 'ltr';
+    document.title = language === 'fa' ? 'آتلیه ورا | نمایشگاه قالی' : 'Atelier Véra | Rug Showroom';
+    document.querySelector('meta[name="description"]').content = language === 'fa'
+      ? 'آتلیه ورا؛ آرشیوی گزیده از قالی‌های دست‌بافت. بافته‌هایی استثنایی را در فضای خود بیازمایید و برای مشاوره خصوصی وقت بگیرید.'
+      : 'Atelier Véra: a considered archive of handwoven rugs. Preview exceptional weaves in your space and request a private consultation.';
+    $('#language-toggle').textContent = language === 'fa' ? 'English' : 'فارسی';
+    $('#language-toggle').setAttribute('aria-label', language === 'fa' ? 'Switch language to English' : 'تغییر زبان به فارسی');
+    $('#studio-rug').innerHTML = rugs.map(rug => `<option value="${rug.id}">${rugText(rug, 'name')}</option>`).join('');
+    $('#studio-rug').value = state.rug;
+    renderCatalog();
+    renderStudio();
+    persistFolio();
+    if ($('#inspect-dialog').open) inspect(state.inspect, state.inspectSize);
+    if ($('#folio-dialog').open) renderFolio();
+  } finally {
+    setLanguage.isUpdating = false;
+  }
 }
 
 function updateBookingDate() {
