@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { rugs, sizes, dimensions, priceFor, sizeLabel } from '../src/rugs.js';
 import { filterRugs, sortRugs } from '../src/catalog.js';
 import { galleryViews, galleryArtwork, dimensionsLabel, roomPreview, artworkSource } from '../src/gallery.js';
-import { whatsappInquiry } from '../src/inquiry.js';
+import { whatsappInquiry, validInquiryContact } from '../src/inquiry.js';
 import { setupMagnifier } from '../src/magnifier.js';
 
 test('combinable gallery filters cover city, color, category, metric size and multilingual search', () => {
@@ -75,6 +75,30 @@ test('WhatsApp links encode selected piece, dimensions, currency price and refus
   assert.equal(url.pathname, '/447700900123');
   for (const text of [details.rug.name, details.rug.sku, details.rug.id, details.size, details.price]) assert.ok(url.searchParams.get('text').includes(text));
   for (const phone of ['', 'javascript:alert(1)', '123', '01234567890', '1'.repeat(16)]) assert.equal(whatsappInquiry(phone, details), null);
+});
+
+test('room mockups switch furniture while retaining the selected rug and dimensions', () => {
+  const scenes = ['living', 'dining', 'bedroom'].map(room => roomPreview(rugs[3], 'preview', '9x12', room));
+  assert.equal(new Set(scenes).size, 3);
+  assert.match(scenes[1], /Dining room furniture/);
+  assert.match(scenes[2], /Bedroom furniture/);
+  for (const scene of scenes) {
+    assert.match(scene, /id="preview-rug-motif"/);
+    assert.ok(scene.includes(`scale(${dimensions['9x12'][0] * 65 / 340} ${dimensions['9x12'][1] * 65 / 440})`));
+    assert.equal((scene.match(/<svg/g) || []).length, 1);
+  }
+});
+
+test('private inquiry accepts an email or real phone digits and encodes personal preferences', () => {
+  for (const contact of ['collector@example.com', '+44 (7700) 900-123', '  +1 212 555 0123  ']) assert.equal(validInquiryContact(contact), true);
+  for (const contact of ['', 'invalid@', '-------', '12345', '1'.repeat(16), 'javascript:alert(1)']) assert.equal(validInquiryContact(contact), false);
+  const details = { rug: rugs[0], size: '9 × 12 ft', price: '$5,670 USD', name: 'A & B <Collectors>', contact: 'collector+design@example.com', homeTrial: true };
+  const url = new URL(whatsappInquiry('+44 (7700) 900-123', details));
+  const text = url.searchParams.get('text');
+  for (const value of [details.name, details.contact, details.rug.sku, details.size, details.price, 'home trial']) assert.ok(text.includes(value));
+  assert.equal(url.searchParams.size, 1);
+  const withoutTrial = new URL(whatsappInquiry('+44 (7700) 900-123', { ...details, homeTrial: false }));
+  assert.ok(!withoutTrial.searchParams.get('text').includes('home trial'));
 });
 
 test('magnifier supports keyboard navigation, pointer position and accessible toggle state', () => {
