@@ -20,6 +20,9 @@ test('source entrypoint assets resolve under the GitHub Pages project path', asy
   assert.match(html, /href="\.\/src\/assets\/fonts\/cormorant-garamond\.ttf"/);
   assert.match(html, /href="\.\/src\/style\.css"/);
   assert.match(html, /src="\.\/src\/main\.js"/);
+  assert.match(html, /fonts\.googleapis\.com\/css2\?family=Cormorant\+Garamond/);
+  assert.match(html, /family=Plus\+Jakarta\+Sans/);
+  assert.doesNotMatch(html, /showroom\.css/);
   assert.doesNotMatch(main, /import ['"]\.\/style\.css['"]/);
   assert.equal([...css.matchAll(/url\(["']?\.\/assets\/fonts\/[^"')]+\.ttf["']?\)/g)].length, 4);
   for (const path of ['src/assets/favicon.svg', 'src/assets/fonts/cormorant-garamond.ttf']) {

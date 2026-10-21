@@ -5,7 +5,7 @@ import { currencies, formatPrice, createCurrencyService } from './currencyServic
 import { createCurrencyStore } from './currencyStore.js';
 import { filterRugs, sortRugs, colorPalette } from './catalog.js';
 import { galleryViews, galleryArtwork, roomPreview, artworkSource, dimensionsLabel } from './gallery.js';
-import { whatsappInquiry } from './inquiry.js';
+import { whatsappInquiry, validInquiryContact } from './inquiry.js';
 import { setupMagnifier } from './magnifier.js';
 
 const env = import.meta.env ?? {};
@@ -265,8 +265,9 @@ function renderCatalog() {
 
 let previewRug = rugs[0];
 let previewRoom = 'living';
+let previewSize = '8x10';
 function renderRoomModal() {
-  $('#room-preview').innerHTML = roomPreview(previewRug, 'modal-room', state.size || '8x10', previewRoom);
+  $('#room-preview').innerHTML = roomPreview(previewRug, 'modal-room', previewSize, previewRoom);
   $('#room-preview').setAttribute('aria-label', `${previewRug.name} in ${previewRoom === 'living' ? 'a living room' : previewRoom === 'dining' ? 'a dining room' : 'a bedroom'}`);
   document.querySelectorAll('[data-preview-room]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.previewRoom === previewRoom)));
 }
@@ -275,8 +276,9 @@ function openRoom(id) {
   previewRug = rugs.find(rug => rug.id === id);
   if (!previewRug) return;
   previewRoom = 'living';
+  previewSize = state.inspect === id && $('#inspect-dialog').open ? state.inspectSize : state.size || '8x10';
   $('#room-dialog').innerHTML = `<button class="icon-btn modal-close" data-close="room-dialog" aria-label="Close room preview">${icon('close')}</button>
-    <div class="room-modal-heading"><div class="eyebrow">A different perspective</div><h2 id="room-title">${escape(previewRug.name)}</h2>
+    <div class="room-modal-heading"><div class="eyebrow">A different perspective · ${sizeLabel(previewSize)}</div><h2 id="room-title">${escape(previewRug.name)}</h2>
     <div class="segmented room-toggle" role="group" aria-label="Preview room">${[['living', 'Living Room'], ['dining', 'Dining Room'], ['bedroom', 'Bedroom']].map(([value, label]) => `<button data-preview-room="${value}" aria-pressed="${value === 'living'}">${label}</button>`).join('')}</div></div>
     <div id="room-preview" class="room-preview" role="img"></div><div class="room-modal-footer"><p>Illustrative styling only. Colours, scale and placement are approximate.</p><button class="text-link" data-action="inquire" data-id="${previewRug.id}">Discuss this piece ${icon('arrow')}</button></div>`;
   renderRoomModal();
@@ -326,7 +328,8 @@ $('#inquiry-drawer').addEventListener('submit', event => {
   const contact = form.elements.contact;
   contact.setCustomValidity('');
   const value = contact.value.trim();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && !/^\+?[\d\s().-]{7,30}$/.test(value)) contact.setCustomValidity('Enter a valid email address or phone number.');
+  if (!validInquiryContact(value)) contact.setCustomValidity('Enter a valid email address or phone number.');
+  form.elements.name.setCustomValidity(form.elements.name.value.trim() ? '' : 'Enter your name.');
   if (!form.reportValidity()) return;
   const href = whatsappInquiry(env.VITE_WHATSAPP_NUMBER, {
     rug: inquiryRug, size: formatSize(inquirySize), price: priceText(priceFor(inquiryRug, inquirySize)),
@@ -507,7 +510,7 @@ document.addEventListener('click', event => {
   if (action) event.preventDefault();
   if (action === 'inspect') inspect(id);
   if (action === 'visualize') openRoom(id);
-  if (action === 'inquire') openInquiry(id, state.inspect === id && $('#inspect-dialog').open ? state.inspectSize : state.size || '8x10');
+  if (action === 'inquire') openInquiry(id, $('#room-dialog').open && previewRug.id === id ? previewSize : state.inspect === id && $('#inspect-dialog').open ? state.inspectSize : state.size || '8x10');
   if (['living', 'dining', 'bedroom'].includes(button.dataset.previewRoom)) { previewRoom = button.dataset.previewRoom; renderRoomModal(); }
   if (action === 'studio') selectStudio(id);
   if (action === 'add') addFolio(id, state.size || '8x10');

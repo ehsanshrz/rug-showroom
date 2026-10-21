@@ -46,6 +46,13 @@ test('API validates requests, stores receipts, and calculates trusted values', a
   await once(server, 'listening');
   t.after(async () => { await new Promise(resolve => server.close(resolve)); await rm(directory, { recursive: true, force: true }); });
   const base = `http://127.0.0.1:${server.address().port}`;
+  const page = await fetch(base);
+  const policy = page.headers.get('content-security-policy');
+  assert.match(policy, /style-src 'self' https:\/\/fonts\.googleapis\.com;/);
+  assert.match(policy, /font-src 'self' https:\/\/fonts\.gstatic\.com;/);
+  assert.match(policy, /img-src 'self' data: https:\/\/images\.unsplash\.com;/);
+  assert.match(policy, /script-src 'self';/);
+  assert.ok(!policy.includes("'unsafe-inline'"));
   const post = (path, body, headers = {}) => fetch(`${base}/api/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://atelier.example', ...headers }, body: JSON.stringify(body) });
   const contact = { name: 'A Test Visitor', email: 'visitor@example.com' };
   const inquiry = { ...contact, type: 'Trade / Interior design', selection: [{ id: 'oushak', size: '9x12', price: 1 }] };
