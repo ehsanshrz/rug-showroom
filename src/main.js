@@ -232,6 +232,7 @@ function renderCatalog() {
         <span class="card-detail-preview" aria-hidden="true">${galleryArtwork(rug, 'fringe', `detail-${rug.id}`, state.size || '8x10')}</span>
       </button>
       ${index === 0 ? `<span class="card-tag">${state.language === 'fa' ? 'گزیده آتلیه' : 'Atelier selection'}</span>` : ''}
+      <button class="card-save" data-action="add" data-id="${rug.id}" aria-label="Save ${escape(rugText(rug, 'name'))} to private selection">${icon('bag')}</button>
       <span class="plate-number" aria-hidden="true">${String(index + 1).padStart(2, '0')}</span>
     </div>
     <div class="card-meta"><span>${rugText(rug, 'style')} / ${escape(rug.city)}</span><span class="mono">${rug.flatweave ? (state.language === 'fa' ? 'تخت‌باف' : 'Flatweave') : `${persianDigits(rug.kpsi)} KPSI`}</span></div>
@@ -404,6 +405,7 @@ function inspect(id, size = state.size || '8x10') {
       <p class="form-note vip-unavailable" hidden>برای فعال‌سازی واتس‌اپ، شماره گالری را تنظیم کنید.</p>
       <button class="btn outline media-request" data-lead="media">درخواست فیلم باکیفیت / نمونه بافت ${icon('arrow')}</button>
       <button class="btn outline" data-action="inquire" data-id="${rug.id}">Private inquiry ${icon('arrow')}</button>
+      <button class="text-link" data-action="add-inspect">Save to private selection ${icon('bag')}</button>
       <button class="text-link" data-action="visualize" data-id="${rug.id}">Visualize in Room ${icon('room')}</button>
     </div></div>`;
   renderGallery();
