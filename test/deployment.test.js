@@ -53,6 +53,10 @@ for (const [githubActions, base] of [['false', '/'], ['true', '/rug-showroom/']]
     assert.equal(new Set(fonts).size, 4);
 
     for (const url of urls) {
+      if (url.startsWith('https://')) {
+        assert.ok(['fonts.googleapis.com', 'fonts.gstatic.com'].includes(new URL(url).hostname), `Unexpected external asset: ${url}`);
+        continue;
+      }
       assert.ok((await stat(resolveAssetPath(url))).isFile(), `Missing asset: ${url}`);
     }
     for (const font of fonts) {

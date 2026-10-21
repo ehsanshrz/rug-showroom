@@ -27,8 +27,8 @@ const icons = {
 };
 const icon = name => `<svg class="icon-${name}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] || icons.arrow}</svg>`;
 const escape = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
-let savedLanguage = 'fa';
-try { savedLanguage = localStorage.getItem('atelier-vera-language') === 'en' ? 'en' : 'fa'; } catch {}
+let savedLanguage = 'en';
+try { savedLanguage = localStorage.getItem('atelier-vera-language') === 'fa' ? 'fa' : 'en'; } catch {}
 const persianDigits = value => state.language === 'fa' ? String(value).replace(/\d/g, digit => '۰۱۲۳۴۵۶۷۸۹'[digit]) : String(value);
 const sizeLabel = value => escape(persianDigits(formatSize(value)));
 const priceText = value => formatPrice(value, currencyStore.getState().currency, currencyStore.getState().snapshot.rates, state.language === 'fa' ? 'fa-IR' : 'en-US');
@@ -98,27 +98,25 @@ function heroRoom() {
 
 $('#app').innerHTML = `
   <a class="skip-link" href="#archive">رفتن به آرشیو</a>
-  <div class="announcement"><span>ارسال جهانی</span><span>اندازه دلخواه شما</span><a href="#showroom">بازدید خصوصی از نمایشگاه ↗</a></div>
+  <div class="announcement">An intimate dialogue between art, architecture &amp; the hand of the maker.</div>
   <header><div class="wrap header-inner">
-    <a class="brand" href="#" aria-label="صفحه اصلی آتلیه ورا">ATELIER VÉRA<span>هنر بافت</span></a>
-    <nav class="nav" id="main-nav" aria-label="پیمایش اصلی"><details class="collection-menu"><summary>مجموعه‌ها</summary><div><button data-edit="knotted">دست‌گره</button><button data-edit="vintage">الهام از وینتیج</button><button data-quick-size="runner">کناره‌ها</button><button data-edit="new">تازه‌های آرشیو</button><a href="#archive">آرشیو</a></div></details><a href="#studio">استودیوی فضا</a><a href="#craft">هنر و خاستگاه</a></nav>
+    <a class="brand" href="#" aria-label="صفحه اصلی آتلیه ورا">ATELIER VÉRA<span>THE PRIVATE RUG ATELIER</span></a>
+    <nav class="nav" id="main-nav" aria-label="پیمایش اصلی"><details class="collection-menu"><summary>The Collection</summary><div><button data-edit="knotted">Hand-knotted</button><button data-edit="vintage">Heritage-inspired</button><button data-quick-size="runner">Runners</button><button data-edit="new">New perspectives</button><a href="#archive">View the archive</a></div></details><a href="#craft">The Art of Weaving</a><a href="#showroom">Private Appointments</a></nav>
     <button class="icon-btn mobile-menu" aria-label="باز و بسته کردن پیمایش" aria-controls="main-nav" aria-expanded="false">${icon('menu')}</button>
     <button class="language-toggle" id="language-toggle" type="button" aria-label="Switch language">English</button>
     <label class="currency-control"><span class="sr-only">ارز نمایش قیمت</span><select id="currency-select" aria-label="ارز نمایش قیمت" dir="ltr">${currencies.map(({ code, symbol, flag }) => `<option value="${code}">${flag} ${code} · ${symbol}</option>`).join('')}</select></label>
-    <button class="folio-trigger" data-action="open-folio">${icon('bag')} فهرست انتخاب <span class="badge" id="folio-count">۰</span></button>
-    <a class="btn header-cta" href="#showroom">رزرو مشاوره ${icon('arrow')}</a>
+    <button class="folio-trigger" data-action="open-folio" aria-label="My private selection">${icon('bag')} <span class="badge" id="folio-count">0</span></button>
   </div></header>
   <main>
     <section class="wrap hero" aria-labelledby="hero-title">
-      <div class="hero-copy"><div class="eyebrow">گزیده‌هایی با داستان‌های ماندگار</div><h1 id="hero-title">برای زندگی<br>بافته شده؛<br><em>برای ماندن.</em></h1><p>قالی‌هایی استثنایی، باحوصله و به‌دست انسان بافته‌شده.<br>آرشیوی گزیده از بافت، سنت و زیبایی آرام برای خانه‌های ما.</p>
-        <div class="hero-actions"><a class="btn" href="#archive">گشت‌وگذار در آرشیو ${icon('arrow')}</a><a class="text-link" href="#studio">زاویه دید خود را بیابید ${icon('arrow')}</a></div>
-        <div class="hero-filters" aria-label="گزیده‌های آرشیو"><button data-edit="knotted">دست‌گره</button><button data-edit="vintage">الهام از وینتیج</button><button data-quick-size="runner">کناره‌ها</button><button data-edit="new">تازه‌های آرشیو</button></div>
-        <div class="provenance-metrics"><div><strong>۱۰۰٪</strong>الیاف طبیعی دست‌ریس</div><div><strong>برای شما</strong>امکان سفارش اندازه دلخواه</div><div><strong>ماندگار</strong>هنری برای نسل‌ها</div></div>
+      <div class="hero-copy"><div class="eyebrow">Objects of art. Places of belonging.</div><h1 id="hero-title">Curated<br>Masterpieces.<br><em>Hand-Knotted<br>Heritage.</em></h1><p>Private gallery viewing &amp; bespoke sourcing for collectors and interior architects.</p>
+        <div class="hero-actions"><a class="btn" href="#archive">Explore The Collection ${icon('arrow')}</a><a class="btn outline" href="#showroom">Book Private Viewing</a></div>
+        <div class="hero-footnote"><span class="edition-number">01 — 10</span><span>A considered archive.<br>A lifetime of character.</span></div>
       </div>
-      <div class="hero-art">${heroRoom()}<div class="hero-rug">${rugs[0].svgPattern('hero', rugText(rugs[0], 'name'))}</div><div class="art-top"><span>خانه‌ای سنجیده — شماره ۰۱</span><span>همیشه دست‌بافت</span></div><div class="vertical-note">تجملی آرام‌تر</div><div class="art-card"><div class="mini-art">${rugs[0].svgPattern('hero-thumb', rugText(rugs[0], 'name'))}</div><div><h3>یادگار اوشاک</h3><p>اوشاک، ترکیه &nbsp; / &nbsp; پشم دست‌ریس</p></div><button data-action="inspect" data-id="oushak" aria-label="مشاهده یادگار اوشاک">${icon('arrow')}</button></div></div>
+      <figure class="hero-art"><div class="hero-scene">${heroRoom()}<img class="interior-photo" src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" width="1200" height="1600" alt="Minimalist architectural living room, styled with an illustrative Persian rug overlay" fetchpriority="high"><div class="hero-rug">${rugs[3].svgPattern('hero', 'Illustrative Tabriz silk rug')}</div><span class="art-top">THE ART OF LIVING WELL</span><span class="vertical-note">A study in quiet grandeur</span></div><figcaption><span>Plate 01 / The Tabriz Garden</span><span>Room styling study · illustrative rug</span></figcaption></figure>
     </section>
-    <div class="trust-bar wrap"><span>${icon('weave')} دست‌بافت، نه تولید انبوه</span><span>${icon('globe')} از بهترین سرزمین‌های بافندگی جهان</span><span>${icon('leaf')} الیاف طبیعی، جلوه‌ای ماندگار</span><span>${icon('bag')} نگاهی شخصی به هر بافته</span></div>
-    <section class="wrap section archive-heading" id="archive" aria-labelledby="archive-title"><div class="section-top"><div><div class="eyebrow">آرشیو بافته‌ها</div><h2 id="archive-title">جهانی زیر پای شما.</h2></div><p>ده بافته استثنایی، هنر چندین سده.<br>بافته‌ای را بیابید که با فضای شما سخن می‌گوید.</p></div>
+    <div class="trust-bar wrap"><span>Persia / Anatolia / The Atlas</span><span>Natural fibres. Enduring artistry.</span><a href="#showroom">A personal approach to collecting ↗</a></div>
+    <section class="wrap section archive-heading" id="archive" aria-labelledby="archive-title"><div class="section-top"><div><div class="eyebrow">The curated collection / No. 01</div><h2 id="archive-title">Art, underfoot.</h2></div><p>Extraordinary textures. Singular perspectives.<br>A dialogue between heritage and the contemporary home.</p></div><p class="archive-disclosure">An illustrative collection: rug artwork, detail crops and room previews are design studies, not photographs of verified inventory.</p>
       <details class="filter-drawer" open><summary>${icon('weave')} فیلتر و جست‌وجو <span>+</span></summary><div class="catalog-tools"><div class="filter-group">
         <label><span class="sr-only">سبک بافت</span><select id="style-filter" aria-label="سبک بافت"><option value="">سبک بافت</option>${['Classic', 'Tribal / Nomadic', 'Modern / Vintage', 'Persian', 'Modern', 'Moroccan', 'Kilim', 'Minimalist'].map(value => `<option value="${value}">${localizedStyle(value)}</option>`).join('')}</select></label>
         <label><span class="sr-only">جنس الیاف</span><select id="material-filter" aria-label="جنس الیاف"><option value="">جنس الیاف</option>${['Wool', 'Silk', 'Jute'].map(value => `<option value="${value}">${localizedMaterial(value)}</option>`).join('')}</select></label>
@@ -153,6 +151,8 @@ $('#app').innerHTML = `
   <dialog class="inspect-dialog" id="inspect-dialog" aria-labelledby="inspect-title"></dialog>
   <dialog class="folio-dialog" id="folio-dialog" aria-labelledby="folio-title"></dialog>
   <dialog class="lead-dialog" id="lead-dialog" aria-labelledby="lead-title"></dialog>
+  <dialog class="room-dialog" id="room-dialog" aria-labelledby="room-title"></dialog>
+  <dialog class="inquiry-drawer" id="inquiry-drawer" aria-labelledby="inquiry-title"></dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 `;
 $('.filter-drawer').open = !window.matchMedia('(max-width: 800px)').matches;
@@ -224,19 +224,20 @@ function renderCatalog() {
     : `Showing ${visible.length} of ${rugs.length} pieces · ${filtered.length} matches`;
   $('#filter-pills').innerHTML = filterKeys.filter(key => state[key]).map(key => `<button class="pill" data-clear="${key}" aria-label="${state.language === 'fa' ? 'حذف فیلتر' : 'Remove filter'} ${escape(state[key])}">${escape(key === 'size' ? persianDigits(formatSize(state[key])) : key === 'edit' ? translate(editLabels[state[key]], state.language) : key === 'style' ? localizedStyle(state[key]) : key === 'material' ? localizedMaterial(state[key]) : specText(state[key]))} &nbsp; ×</button>`).join('') + (active ? `<button class="reset" id="reset-filters">${state.language === 'fa' ? 'پاک‌کردن فیلترها' : 'Clear all'}</button>` : '');
   $('#catalog').innerHTML = visible.length ? visible.map((rug, index) => `
-    <article class="rug-card"><div class="rug-picture">
+    <article class="rug-card ${index % 6 === 0 || index % 6 === 4 ? 'editorial-wide' : 'editorial-portrait'}"><div class="rug-picture">
       <button class="card-image-link" data-action="inspect" data-id="${rug.id}" aria-label="${escape(rugText(rug, 'name'))}">
         <span class="image-skeleton" aria-hidden="true"></span>
-        <img class="rug-art catalog-image" src="${artworkSource(rug.svgPattern(`card-${rug.id}`, ''))}" width="340" height="440" loading="lazy" decoding="async" alt="${escape(rugText(rug, 'name'))}">
-        <span class="card-room-preview" aria-hidden="true">${roomPreview(rug, `preview-${rug.id}`, state.size || '8x10')}</span>
+        <img class="rug-art catalog-image" src="${artworkSource(index % 6 === 0 || index % 6 === 4 ? roomPreview(rug, `card-${rug.id}`, state.size || '8x10') : rug.svgPattern(`card-${rug.id}`, ''))}" width="560" height="580" loading="lazy" decoding="async" alt="${escape(rugText(rug, 'name'))}${index % 6 === 0 || index % 6 === 4 ? ' — illustrative room styling' : ' — illustrative weave'}">
+        ${index % 6 === 0 || index % 6 === 4 ? `<span class="card-photo-scene" aria-hidden="true"><img class="card-room-photo" src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&amp;fit=crop&amp;w=1000&amp;q=80" width="1000" height="900" loading="lazy" alt=""><span class="room-rug-overlay">${rug.svgPattern(`photo-rug-${rug.id}`, '')}</span></span>` : ''}
+        <span class="card-detail-preview" aria-hidden="true">${galleryArtwork(rug, 'fringe', `detail-${rug.id}`, state.size || '8x10')}</span>
       </button>
       ${index === 0 ? `<span class="card-tag">${state.language === 'fa' ? 'گزیده آتلیه' : 'Atelier selection'}</span>` : ''}
-      <button class="card-save" data-action="add" data-id="${rug.id}" aria-label="${state.language === 'fa' ? 'افزودن' : 'Add'} ${rugText(rug, 'name')} ${state.language === 'fa' ? 'به فهرست' : 'to selection'}">${icon('bag')}</button>
-      <div class="quick-actions"><button data-action="inspect" data-id="${rug.id}">${icon('eye')} ${state.language === 'fa' ? 'مشاهده بافت' : 'View rug'}</button><button data-action="studio" data-id="${rug.id}">${icon('room')} ${state.language === 'fa' ? 'استودیوی فضا' : 'Room studio'}</button></div>
+      <span class="plate-number" aria-hidden="true">${String(index + 1).padStart(2, '0')}</span>
     </div>
-    <div class="card-meta"><span>${rugText(rug, 'style')} / ${rugText(rug, 'material')}</span><span class="mono">${rug.flatweave ? (state.language === 'fa' ? 'تخت‌باف' : 'Flatweave') : `${persianDigits(rug.kpsi)} KPSI`}</span></div>
+    <div class="card-meta"><span>${rugText(rug, 'style')} / ${escape(rug.city)}</span><span class="mono">${rug.flatweave ? (state.language === 'fa' ? 'تخت‌باف' : 'Flatweave') : `${persianDigits(rug.kpsi)} KPSI`}</span></div>
     <div class="card-bottom"><h3><a href="#inspect" data-action="inspect" data-id="${rug.id}">${rugText(rug, 'name')}</a></h3><span>${money(priceFor(rug, state.size || '8x10'))}</span></div>
-    <p class="card-origin">${rugText(rug, 'origin')} &nbsp; · &nbsp; ${sizeLabel(state.size || '8x10')}</p></article>
+    <p class="card-origin">${rugText(rug, 'origin')} &nbsp; · &nbsp; ${sizeLabel(state.size || '8x10')} · ${rugText(rug, 'material')}</p>
+    <div class="card-actions"><button data-action="visualize" data-id="${rug.id}">${icon('room')} Visualize in Room</button><button data-action="inquire" data-id="${rug.id}">Inquire ${icon('arrow')}</button></div></article>
   `).join('') : `<div class="empty">${state.language === 'fa' ? 'بافته‌ای با این مشخصات پیدا نشد.' : 'No rugs match these filters.'}<br><button class="text-link" id="empty-reset">${state.language === 'fa' ? 'پاک‌کردن فیلترها' : 'Clear filters'} ←</button></div>`;
   $('#view-archive').hidden = !!active || state.sort !== 'featured';
   $('#view-archive').innerHTML = `${state.language === 'fa' ? state.expanded ? 'نمایش گزیده‌های آتلیه' : 'مشاهده همه بافته‌ها' : state.expanded ? 'Show Atelier selections' : 'View all rugs'} <span class="mono">${persianDigits(state.expanded ? 4 : 10)}</span> ${icon('arrow')}`;
@@ -250,11 +251,94 @@ function renderCatalog() {
     image.addEventListener('error', failed, { once: true });
     if (image.complete) image.naturalWidth ? loaded() : failed();
   });
+  document.querySelectorAll('.card-room-photo').forEach(image => {
+    const showPhoto = () => image.parentElement.classList.toggle('photo-ready', image.naturalWidth > 0);
+    image.addEventListener('load', showPhoto, { once: true });
+    if (image.complete) showPhoto();
+  });
   document.querySelectorAll('[data-quick-size]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.quickSize === state.size)));
   document.querySelectorAll('[data-color]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.color === state.color)));
   document.querySelectorAll('[data-edit]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.edit === state.edit)));
   translatePage();
+  updateCurrencyUI();
 }
+
+let previewRug = rugs[0];
+let previewRoom = 'living';
+function renderRoomModal() {
+  $('#room-preview').innerHTML = roomPreview(previewRug, 'modal-room', state.size || '8x10', previewRoom);
+  $('#room-preview').setAttribute('aria-label', `${previewRug.name} in ${previewRoom === 'living' ? 'a living room' : previewRoom === 'dining' ? 'a dining room' : 'a bedroom'}`);
+  document.querySelectorAll('[data-preview-room]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.previewRoom === previewRoom)));
+}
+
+function openRoom(id) {
+  previewRug = rugs.find(rug => rug.id === id);
+  if (!previewRug) return;
+  previewRoom = 'living';
+  $('#room-dialog').innerHTML = `<button class="icon-btn modal-close" data-close="room-dialog" aria-label="Close room preview">${icon('close')}</button>
+    <div class="room-modal-heading"><div class="eyebrow">A different perspective</div><h2 id="room-title">${escape(previewRug.name)}</h2>
+    <div class="segmented room-toggle" role="group" aria-label="Preview room">${[['living', 'Living Room'], ['dining', 'Dining Room'], ['bedroom', 'Bedroom']].map(([value, label]) => `<button data-preview-room="${value}" aria-pressed="${value === 'living'}">${label}</button>`).join('')}</div></div>
+    <div id="room-preview" class="room-preview" role="img"></div><div class="room-modal-footer"><p>Illustrative styling only. Colours, scale and placement are approximate.</p><button class="text-link" data-action="inquire" data-id="${previewRug.id}">Discuss this piece ${icon('arrow')}</button></div>`;
+  renderRoomModal();
+  $('#room-dialog').showModal();
+}
+
+let inquiryRug = rugs[0];
+let inquirySize = '8x10';
+function openInquiry(id, size = state.size || '8x10') {
+  const rug = rugs.find(item => item.id === id);
+  if (!rug || !sizes.includes(size)) return;
+  inquiryRug = rug;
+  inquirySize = size;
+  $('#room-dialog').close();
+  $('#inspect-dialog').close();
+  $('#inquiry-drawer').innerHTML = `<button class="icon-btn modal-close" data-close="inquiry-drawer" aria-label="Close inquiry">${icon('close')}</button>
+    <div class="eyebrow">Your private concierge</div><h2 id="inquiry-title">An exceptional<br><em>piece. A personal service.</em></h2>
+    <div class="inquiry-piece"><div class="inquiry-thumbnail">${rug.svgPattern('inquiry-thumb', escape(rug.name))}</div><div><span class="eyebrow">${escape(rug.sku)}</span><h3>${escape(rug.name)}</h3><p>${escape(rug.origin)}</p><p>${sizeLabel(size)} · ${escape(rug.material)}</p></div></div>
+    <dl class="spec-grid"><div><dt>Weave</dt><dd>${rug.flatweave ? 'Flatweave' : `${rug.kpsi} KPSI`}</dd></div><div><dt>Foundation / pile</dt><dd>${escape(rug.foundation)} / ${escape(rug.pile)}</dd></div><div><dt>Indicative price</dt><dd>${money(priceFor(rug, size))}</dd></div><div><dt>Condition</dt><dd>${escape(rug.condition)}</dd></div></dl>
+    <form id="private-inquiry" class="folio-form">
+      <label class="field">Name<input name="name" autocomplete="name" maxlength="100" required></label>
+      <label class="field">Email or phone<input name="contact" autocomplete="email" maxlength="254" required placeholder="you@example.com or +1 555 010 1234"></label>
+      <label class="check-field"><input type="checkbox" name="homeTrial"> Request Home Trial</label>
+      <p class="form-note">Home trials are subject to availability and gallery approval. No payment is taken.</p>
+      <button class="btn" id="whatsapp-submit" type="submit">Inquire via WhatsApp ↗</button>
+      <p class="form-note" id="whatsapp-availability"></p>
+      <p class="form-note">Your details are included in the WhatsApp draft only. Review and send the message there; this form does not store or submit your details to the atelier.</p>
+    </form>`;
+  const configured = !!whatsappInquiry(env.VITE_WHATSAPP_NUMBER, { rug, size: formatSize(size), price: priceText(priceFor(rug, size)) });
+  $('#whatsapp-submit').disabled = !configured;
+  $('#whatsapp-availability').textContent = configured ? 'Continue to WhatsApp to send your request.' : 'WhatsApp concierge is not configured yet. Please request a private viewing below.';
+  if (!configured) {
+    const alternative = document.createElement('a');
+    alternative.href = '#showroom';
+    alternative.className = 'text-link';
+    alternative.textContent = 'Request a private viewing instead ↗';
+    alternative.addEventListener('click', () => $('#inquiry-drawer').close());
+    $('#private-inquiry').append(alternative);
+  }
+  $('#inquiry-drawer').showModal();
+}
+
+$('#inquiry-drawer').addEventListener('submit', event => {
+  if (event.target.id !== 'private-inquiry') return;
+  event.preventDefault();
+  const form = event.target;
+  const contact = form.elements.contact;
+  contact.setCustomValidity('');
+  const value = contact.value.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && !/^\+?[\d\s().-]{7,30}$/.test(value)) contact.setCustomValidity('Enter a valid email address or phone number.');
+  if (!form.reportValidity()) return;
+  const href = whatsappInquiry(env.VITE_WHATSAPP_NUMBER, {
+    rug: inquiryRug, size: formatSize(inquirySize), price: priceText(priceFor(inquiryRug, inquirySize)),
+    name: form.elements.name.value.trim(), contact: value, homeTrial: form.elements.homeTrial.checked,
+  });
+  if (href) window.open(href, '_blank', 'noopener,noreferrer');
+});
+$('#inquiry-drawer').addEventListener('input', event => event.target.setCustomValidity?.(''));
+document.querySelectorAll('.interior-photo').forEach(image => {
+  image.addEventListener('error', () => { image.hidden = true; });
+  if (image.complete && !image.naturalWidth) image.hidden = true;
+});
 
 function furniture() {
   if (state.room === 'dining') return `<g filter="url(#room-shadow)"><g fill="#a18a6e" stroke="#74604d" stroke-width="2">${[230, 310, 390].map(y => `<rect x="211" y="${y}" width="43" height="48" rx="9"/><rect x="466" y="${y}" width="43" height="48" rx="9"/>`).join('')}<rect x="336" y="164" width="48" height="45" rx="8"/><rect x="336" y="447" width="48" height="45" rx="8"/></g><rect x="250" y="205" width="220" height="245" rx="55" fill="#c4ad88" stroke="#998262" stroke-width="3"/><path d="M270 230v192m20-206v219m28-223v227m28-232v235m30-233v231m30-223v217m29-192v171" stroke="#ab9370" opacity=".5"/><ellipse cx="360" cy="325" rx="30" ry="25" fill="#ddd4bd"/><ellipse cx="360" cy="325" rx="18" ry="15" fill="#79816a"/></g>`;
@@ -316,8 +400,8 @@ function inspect(id, size = state.size || '8x10') {
       <a class="btn vip-inquiry" id="vip-inquiry" target="_blank" rel="noopener noreferrer"></a>
       <p class="form-note vip-unavailable" hidden>برای فعال‌سازی واتس‌اپ، شماره گالری را تنظیم کنید.</p>
       <button class="btn outline media-request" data-lead="media">درخواست فیلم باکیفیت / نمونه بافت ${icon('arrow')}</button>
-      <button class="btn outline" data-action="add-inspect">${icon('bag')} افزودن به فهرست انتخاب ${icon('arrow')}</button>
-      <button class="text-link" data-action="studio" data-id="${rug.id}">مشاهده در استودیوی فضا ${icon('arrow')}</button>
+      <button class="btn outline" data-action="inquire" data-id="${rug.id}">Private inquiry ${icon('arrow')}</button>
+      <button class="text-link" data-action="visualize" data-id="${rug.id}">Visualize in Room ${icon('room')}</button>
     </div></div>`;
   renderGallery();
   translatePage();
@@ -422,11 +506,14 @@ document.addEventListener('click', event => {
   const { action, id, close, clear, room, floor, studioSize, light, consultation, remove } = button.dataset;
   if (action) event.preventDefault();
   if (action === 'inspect') inspect(id);
+  if (action === 'visualize') openRoom(id);
+  if (action === 'inquire') openInquiry(id, state.inspect === id && $('#inspect-dialog').open ? state.inspectSize : state.size || '8x10');
+  if (['living', 'dining', 'bedroom'].includes(button.dataset.previewRoom)) { previewRoom = button.dataset.previewRoom; renderRoomModal(); }
   if (action === 'studio') selectStudio(id);
   if (action === 'add') addFolio(id, state.size || '8x10');
   if (action === 'add-inspect') addFolio(state.inspect, state.inspectSize);
   if (action === 'open-folio') { if (!pendingRequests.inquiry) renderFolio(); $('#folio-dialog').showModal(); }
-  if (['inspect-dialog', 'folio-dialog', 'lead-dialog'].includes(close)) $(`#${close}`).close();
+  if (['inspect-dialog', 'folio-dialog', 'lead-dialog', 'room-dialog', 'inquiry-drawer'].includes(close)) $(`#${close}`).close();
   if (button.dataset.lead) openLead(button.dataset.lead);
   if (galleryViews.includes(button.dataset.gallery)) { state.galleryView = button.dataset.gallery; renderGallery(); }
   if (button.dataset.edit || button.dataset.quickSize || button.dataset.color) {

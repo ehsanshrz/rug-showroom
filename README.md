@@ -1,13 +1,15 @@
 # ATELIER VÉRA
 
-A responsive rug showroom with ten original SVG weaves, combinable archive filters, a live architectural room studio, zoomable specifications, a persistent inquiry folio, and private or virtual consultation requests.
+A luxury editorial rug atelier with an asymmetrical 60/40 hero, an alternating room/portrait gallery, ten original SVG weaves, private inquiry drawers, a three-room preview modal, combinable archive filters, and private or virtual consultation requests.
 
 ## Boutique showroom experience
 
-- Linen/alabaster surfaces, charcoal craft storytelling, locally bundled editorial typography, a private-viewing announcement and collection menu, and a persistent consultation CTA.
+- Warm bone (`#F7F5F0`), white gallery cards, antique brass accents and hairline borders. Cormorant Garamond and Plus Jakarta Sans are requested from Google Fonts in the HTML head; bundled serif and sans-serif fonts provide fallbacks.
 - Mobile-collapsible discovery controls combine origin, style, material, sizes (including 5 × 8 ft), color swatches, search and curated edits. Active badges, clear-all and counts stay synchronized. The Indigo and Charcoal swatches correctly return an empty state when no matching demo inventory exists.
 - Sort by price, arrival order, largest available dimensions or knot density. Demo arrival order is illustrative, not a verified acquisition date. All demo rugs offer the same sizes, so size sorting preserves their order; flatweaves appear after knotted pieces when sorting by knot density.
-- Portrait cards have lazy-loaded local artwork, reserved dimensions and shimmer placeholders, with an in-room hover preview on pointer devices. Touch and keyboard visitors can use the visible detail/studio actions.
+- The editorial gallery alternates two-column room styling studies and 4:5 portrait views. Hover or keyboard focus cross-fades into an illustrative fringe/detail crop. Visible “Visualize in Room” and “Inquire” actions work without hover.
+- Each piece opens a native, keyboard-accessible preview modal with living, dining and bedroom furniture and a rug projected onto the floor. A separate slide-over inquiry drawer shows SKU, thumbnail, dimensions, weave and material details.
+- The drawer accepts a name, email or phone and an optional home-trial request. It builds a WhatsApp draft, not a checkout or stored lead; the visitor must review and send it. No home trial is confirmed automatically. English is the initial language; a saved Farsi preference is retained.
 - Product inspection includes full layout, room, illustrative reverse and cropped fringe views, a keyboard/touch magnifier, and metric/imperial dimensions. Room previews update with the selected size.
 - Product-specific viewing and high-resolution video/swatch requests open a contact/date/time form. Requests use the existing appointment API; SKU, selected size, request purpose and preferred local time are stored in the appointment note. Media requests use the date/time as a preferred follow-up. A receipt appears only after storage succeeds; no video, swatch shipment or appointment is automatically fulfilled.
 
@@ -32,7 +34,7 @@ When running `npm start`, also set the same `VITE_ALANCHAND_ENDPOINT` in the ser
 
 ### Gallery configuration and inventory
 
-Set `VITE_WHATSAPP_NUMBER` before building to the gallery's international WhatsApp number, including country code (digits, or familiar phone punctuation). No recipient is invented: the VIP link stays hidden with a configuration notice until a valid number is supplied. Each link contains the selected rug name, SKU/ID, size and current indicative currency price. The visitor must review and send the message in WhatsApp; clicking the link does not complete a purchase.
+Set `VITE_WHATSAPP_NUMBER` before building to the gallery's international WhatsApp number, including country code (digits, or familiar phone punctuation). No recipient is invented: the VIP link stays hidden and the drawer's WhatsApp button stays disabled with a configuration notice and a private-viewing alternative until a valid number is supplied. Each link contains the selected rug name, SKU/ID, size and current indicative currency price. Drawer messages also contain the visitor's name, contact and home-trial preference. These contact details are not placed in browser storage. The visitor must review and send the message in WhatsApp; clicking the link does not complete a purchase.
 
 `src/rugs.js` contains illustrative foundation, pile, dyes, age/condition, city, dominant color and broad style categories. Flatweaves are not presented as knotted rugs. The existing foot dimensions are retained alongside runners, 2 × 3 m and 3 × 4 m options. `dimensions` is the shared metric source for the room simulator and size-based quotes; the simulator has a matching five-foot scale and living, dining and bedroom settings.
 
@@ -66,7 +68,9 @@ Booking dates use the selected showroom's local calendar (New York, Copenhagen, 
 
 Requests are not exposed through a public read API. Authorized operators can query the `requests` table with SQLite tooling (`reference`, `kind`, `created_at`, `payload`) to follow up with clients. Back up the database securely and implement an appropriate retention policy for personal information. Browser storage holds only folio piece IDs and dimensions, not contact details.
 
-All rug and room art is local SVG. Cormorant Garamond, Inter, and JetBrains Mono are bundled locally under the SIL Open Font License; license notices are in `public/fonts`. There are no external image or font requests. The collection is an illustrative curated archive; replace its inventory and provenance with verified business records before commercial use.
+Rug and detail artwork and the three room previews are local SVG illustrations. The hero and wide cards progressively enhance room studies with an external [Unsplash interior image](https://unsplash.com/photos/1600210492486-724fe5c67fb0) served by `images.unsplash.com` (image identifier `photo-1600210492486-724fe5c67fb0`); the SVG scene remains visible if the photo is unavailable. Rugs are illustrative overlays, not rugs actually photographed in that room. Replace these composites with owned/licensed product and room photography for a commercial launch.
+
+Google Fonts requests go to `fonts.googleapis.com` and `fonts.gstatic.com`. The Node server CSP allows only these font hosts and the Unsplash image host in addition to the existing sources; mirror those rules on other hosts. Bundled Cormorant Garamond, Inter, and JetBrains Mono remain available under the SIL Open Font License; license notices are in `public/fonts`. The collection is an illustrative curated archive; replace inventory, provenance and service/location claims with verified business records before commercial use.
 
 ## Verification
 

@@ -80,7 +80,7 @@ export function createApp({ databasePath = resolve(root, 'data/requests.sqlite')
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     response.setHeader('X-Frame-Options', 'DENY');
-    response.setHeader('Content-Security-Policy', `default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src ${exchangeSources.join(' ')}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'`);
+    response.setHeader('Content-Security-Policy', `default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://images.unsplash.com; connect-src ${exchangeSources.join(' ')}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'`);
     let path;
     try { path = decodeURIComponent(new URL(request.url, 'http://localhost').pathname); } catch { json(response, 400, { error: 'Invalid URL.' }); return; }
     if (path.startsWith('/api/')) {
