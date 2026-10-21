@@ -155,6 +155,7 @@ $('#app').innerHTML = `
   <dialog class="lead-dialog" id="lead-dialog" aria-labelledby="lead-title"></dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 `;
+$('.filter-drawer').open = !window.matchMedia('(max-width: 800px)').matches;
 
 const originalText = new WeakMap();
 const originalAttributes = new WeakMap();
@@ -502,6 +503,12 @@ $('#lead-dialog').addEventListener('change', event => {
     const form = $('#product-lead');
     form.elements.date.min = bookingToday(form.elements.location.value);
   }
+});
+$('#lead-dialog').addEventListener('keydown', event => {
+  if (event.key !== 'Escape') return;
+  event.preventDefault();
+  event.stopPropagation();
+  $('#lead-dialog').close();
 });
 $('#lead-dialog').addEventListener('submit', async event => {
   if (event.target.id !== 'product-lead') return;

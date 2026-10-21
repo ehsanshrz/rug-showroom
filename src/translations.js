@@ -32,6 +32,8 @@ const english = {
   'زمان پیشنهادی': 'Preferred time',
   'به وقت محلی آتلیه؛ تأیید نهایی با گالری.': 'Showroom local time; subject to gallery confirmation.',
   'ارسال درخواست': 'Send request',
+  'برای شما': 'Made for you',
+  'ماندگار': 'Enduring',
   'ارز نمایش قیمت': 'Display currency',
   'رنگ غالب': 'Dominant color',
   'کلاسیک': 'Classic',

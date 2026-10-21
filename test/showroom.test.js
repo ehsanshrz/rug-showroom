@@ -69,6 +69,16 @@ test('API validates requests, stores receipts, and calculates trusted values', a
   assert.equal((await post('inquiries', { ...inquiry, name: 'x'.repeat(17000) })).status, 413);
   const appointment = { ...contact, consultation: 'private', location: 'Milan', date: '2099-10-14', note: 'A quiet space.' };
   assert.equal((await post('appointments', appointment)).status, 201);
+  for (const purpose of ['Showroom viewing request', 'High-resolution video / swatch request; preferred follow-up']) {
+    const note = `${purpose}: The Oushak Heirloom — SKU AV-001; 5′ × 8′; preferred local time 14:30. Please share fringe details.`;
+    const leadResponse = await post('appointments', { ...appointment, note });
+    assert.equal(leadResponse.status, 201);
+    const leadReceipt = await leadResponse.json();
+    const leadDatabase = new DatabaseSync(databasePath);
+    const lead = JSON.parse(leadDatabase.prepare('SELECT payload FROM requests WHERE reference = ?').get(leadReceipt.reference).payload);
+    assert.equal(lead.note, note);
+    leadDatabase.close();
+  }
   assert.equal((await post('appointments', { ...appointment, consultation: 'virtual', location: undefined })).status, 201);
   assert.equal((await post('appointments', { ...appointment, date: '2020-01-01' })).status, 400);
   assert.equal((await post('appointments', { ...appointment, date: '2099-02-31' })).status, 400);

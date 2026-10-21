@@ -198,3 +198,9 @@ h1 { font-size: clamp(62px, 6vw, 92px); line-height: 1.01; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+@media (max-width: 380px) {
+  header { height: 156px; }
+  .nav { top: 156px; }
+  .header-cta { flex: 1 0 100%; min-height: 32px; padding-block: 4px; }
+  html { scroll-padding-top: 174px; }
+}
