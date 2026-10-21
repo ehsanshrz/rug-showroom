@@ -62,6 +62,8 @@ test('gallery views are distinct, locally rendered and scale with selected dimen
   assert.ok(artwork.every(svg => svg.startsWith('<svg')));
   assert.equal(decodeURIComponent(artworkSource(artwork[0]).split(',')[1]), artwork[0]);
   assert.notEqual(roomPreview(rugs[0], 'room', 'runner'), roomPreview(rugs[0], 'room', '9x12'));
+  assert.equal((roomPreview(rugs[0], 'room', 'runner').match(/<svg/g) || []).length, 1);
+  assert.ok(roomPreview(rugs[0], 'room', 'runner').includes(`scale(${0.8 * 65 / 340} ${3 * 65 / 440})`));
   assert.equal(dimensionsLabel('5x8'), '152 × 244 cm / 5.0 × 8.0 ft');
   assert.equal(dimensionsLabel('8x10'), '244 × 305 cm / 8.0 × 10.0 ft');
 });

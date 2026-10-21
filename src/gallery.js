@@ -11,6 +11,7 @@ export function roomPreview(rug, prefix, size = '8x10') {
   const [width, length] = dimensions[size];
   const rugWidth = width * 65;
   const rugLength = length * 65;
+  const rugArtwork = rug.svgPattern(`${prefix}-rug`, '').replace(/^<svg[^>]*>/, '<g>').replace('</svg>', '</g>');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 580" aria-hidden="true">
     <defs><linearGradient id="${prefix}-wall" x2="1" y2="1"><stop stop-color="#f0e9df"/><stop offset="1" stop-color="#cec3b4"/></linearGradient></defs>
     <path fill="url(#${prefix}-wall)" d="M0 0h560v340H0z"/>
@@ -21,7 +22,7 @@ export function roomPreview(rug, prefix, size = '8x10') {
     <rect x="373" y="78" width="84" height="124" fill="#e8dfcf"/>
     <path d="M390 180q-5-100 50-65v65" fill="#92947d"/>
     <g transform="translate(280 420) scale(1 .57) rotate(-12)">
-      ${rug.svgPattern(`${prefix}-rug`, '').replace('<svg ', `<svg x="${-rugWidth / 2}" y="${-rugLength / 2}" width="${rugWidth}" height="${rugLength}" preserveAspectRatio="none" `)}
+      <g transform="scale(${rugWidth / 340} ${rugLength / 440}) translate(-170 -220)">${rugArtwork}</g>
     </g>
     <path d="M90 250h305v105H90z" fill="#b7a58d"/>
     <rect x="103" y="243" width="280" height="80" rx="13" fill="#e4d9c7"/>
