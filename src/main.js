@@ -169,27 +169,32 @@ function translatePage() {
 }
 
 function setLanguage(language) {
-  if (!['fa', 'en'].includes(language)) return;
-  state.language = language;
-  try { localStorage.setItem('atelier-vera-language', language); } catch {}
-  document.documentElement.lang = language;
-  document.documentElement.dir = language === 'fa' ? 'rtl' : 'ltr';
-  document.title = language === 'fa' ? 'آتلیه ورا | نمایشگاه قالی' : 'Atelier Véra | Rug Showroom';
-  document.querySelector('meta[name="description"]').content = language === 'fa'
-    ? 'آتلیه ورا؛ آرشیوی گزیده از قالی‌های دست‌بافت. بافته‌هایی استثنایی را در فضای خود بیازمایید و برای مشاوره خصوصی وقت بگیرید.'
-    : 'Atelier Véra: a considered archive of handwoven rugs. Preview exceptional weaves in your space and request a private consultation.';
-  $('#language-toggle').textContent = language === 'fa' ? 'English' : 'فارسی';
-  $('#language-toggle').setAttribute('aria-label', language === 'fa' ? 'Switch language to English' : 'تغییر زبان به فارسی');
-  $('#studio-rug').innerHTML = rugs.map(rug => `<option value="${rug.id}">${rugText(rug, 'name')}</option>`).join('');
-  $('#studio-rug').value = state.rug;
-  $('#color-filter').innerHTML = `<option value="">${language === 'fa' ? 'رنگ غالب' : 'Dominant color'}</option>${[...new Set(rugs.map(rug => rug.dominantColor))].map(color => `<option value="${color}">${specText(color)}</option>`).join('')}`;
-  $('#color-filter').value = state.color;
-  renderCatalog();
-  renderStudio();
-  persistFolio();
-  if ($('#inspect-dialog').open) inspect(state.inspect, state.inspectSize);
-  if ($('#folio-dialog').open) renderFolio();
-  updateCurrencyUI();
+  if (!['fa', 'en'].includes(language) || setLanguage.isUpdating) return;
+  setLanguage.isUpdating = true;
+  try {
+    state.language = language;
+    try { localStorage.setItem('atelier-vera-language', language); } catch {}
+    document.documentElement.lang = language;
+    document.documentElement.dir = language === 'fa' ? 'rtl' : 'ltr';
+    document.title = language === 'fa' ? 'آتلیه ورا | نمایشگاه قالی' : 'Atelier Véra | Rug Showroom';
+    document.querySelector('meta[name="description"]').content = language === 'fa'
+      ? 'آتلیه ورا؛ آرشیوی گزیده از قالی‌های دست‌بافت. بافته‌هایی استثنایی را در فضای خود بیازمایید و برای مشاوره خصوصی وقت بگیرید.'
+      : 'Atelier Véra: a considered archive of handwoven rugs. Preview exceptional weaves in your space and request a private consultation.';
+    $('#language-toggle').textContent = language === 'fa' ? 'English' : 'فارسی';
+    $('#language-toggle').setAttribute('aria-label', language === 'fa' ? 'Switch language to English' : 'تغییر زبان به فارسی');
+    $('#studio-rug').innerHTML = rugs.map(rug => `<option value="${rug.id}">${rugText(rug, 'name')}</option>`).join('');
+    $('#studio-rug').value = state.rug;
+    $('#color-filter').innerHTML = `<option value="">${language === 'fa' ? 'رنگ غالب' : 'Dominant color'}</option>${[...new Set(rugs.map(rug => rug.dominantColor))].map(color => `<option value="${color}">${specText(color)}</option>`).join('')}`;
+    $('#color-filter').value = state.color;
+    renderCatalog();
+    renderStudio();
+    persistFolio();
+    if ($('#inspect-dialog').open) inspect(state.inspect, state.inspectSize);
+    if ($('#folio-dialog').open) renderFolio();
+    updateCurrencyUI();
+  } finally {
+    setLanguage.isUpdating = false;
+  }
 }
 
 function updateBookingDate() {

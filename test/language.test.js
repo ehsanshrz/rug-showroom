@@ -18,11 +18,12 @@ for (const open of [false, true]) {
     const calls = [];
     const storage = new Map();
     const document = { documentElement: {}, querySelector: $ };
+    let reenterLanguage;
     const setLanguage = runInNewContext(`${setLanguageSource}; setLanguage`, {
       state, document, $, rugs: [{ id: 'tabriz', name: 'The Tabriz Garden' }],
       rugText: rug => state.language === 'en' ? rug.name : 'باغ تبریز',
       localStorage: { setItem: (key, value) => storage.set(key, value) },
-      renderCatalog: () => calls.push('catalog'),
+      renderCatalog: () => { calls.push('catalog'); reenterLanguage?.(); },
       renderStudio: () => calls.push('studio'),
       persistFolio: () => calls.push('folio'),
       specText: value => value,
@@ -30,6 +31,7 @@ for (const open of [false, true]) {
       inspect: (...args) => calls.push(['inspect', ...args]),
       renderFolio: () => calls.push('dialog'),
     });
+    reenterLanguage = () => setLanguage(state.language);
 
     for (const language of ['en', 'fa', 'en', 'fa']) {
       calls.length = 0;
@@ -45,6 +47,7 @@ for (const open of [false, true]) {
       assert.equal($('#studio-rug').value, 'tabriz');
       assert.match($('#studio-rug').innerHTML, language === 'fa' ? /باغ تبریز/ : /The Tabriz Garden/);
       assert.deepEqual({ ...state, language: selections.language }, selections);
+      assert.equal(setLanguage.isUpdating, false);
     }
     calls.length = 0;
     setLanguage('invalid');
