@@ -3,7 +3,8 @@ import { bookingToday } from './booking.js';
 import { translate } from './translations.js';
 import { currencies, formatPrice, createCurrencyService } from './currencyService.js';
 import { createCurrencyStore } from './currencyStore.js';
-import { filterRugs } from './catalog.js';
+import { filterRugs, sortRugs, colorPalette } from './catalog.js';
+import { galleryViews, galleryArtwork, roomPreview, artworkSource, dimensionsLabel } from './gallery.js';
 import { whatsappInquiry } from './inquiry.js';
 import { setupMagnifier } from './magnifier.js';
 
@@ -33,7 +34,10 @@ const sizeLabel = value => escape(persianDigits(formatSize(value)));
 const priceText = value => formatPrice(value, currencyStore.getState().currency, currencyStore.getState().snapshot.rates, state.language === 'fa' ? 'fa-IR' : 'en-US');
 const money = value => `<span data-price-usd="${value}">${escape(priceText(value))}</span>`;
 const $ = selector => document.querySelector(selector);
-const state = { language: savedLanguage, style: '', material: '', size: '', origin: '', color: '', search: '', sort: 'featured', expanded: false, rug: rugs[0].id, room: 'living', floor: 'oak', studioSize: '8x10', rotated: false, light: 'day', inspect: null, inspectSize: '8x10', folio: [] };
+const state = { language: savedLanguage, style: '', material: '', size: '', origin: '', color: '', edit: '', search: '', sort: 'featured', expanded: false, rug: rugs[0].id, room: 'living', floor: 'oak', studioSize: '8x10', rotated: false, light: 'day', inspect: null, inspectSize: '8x10', galleryView: 'layout', folio: [] };
+const filterKeys = ['style', 'material', 'size', 'origin', 'color', 'edit', 'search'];
+const viewLabels = { layout: 'نمای کامل', room: 'در فضای اتاق', reverse: 'پشت بافت (نمونه)', fringe: 'جزئیات ریشه' };
+const editLabels = { knotted: 'دست‌گره', vintage: 'الهام از وینتیج', new: 'تازه‌های آرشیو' };
 const pendingRequests = { inquiry: false, appointment: false };
 const rugTranslations = {
   oushak: ['یادگار اوشاک', 'آرشیو آناتولی', 'اوشاک، ترکیه', 'قالی ایرانی', 'پشم', 'یادگاری آفتاب‌خورده با رنگ‌های سفالی و جو دوسری. پشم دست‌ریس و نقش‌مایه‌های گیاهی سخاوتمندانه، شعر آرام بافندگی آناتولی را در خود دارند.'],
@@ -93,32 +97,37 @@ function heroRoom() {
 }
 
 $('#app').innerHTML = `
+  <a class="skip-link" href="#archive">رفتن به آرشیو</a>
+  <div class="announcement"><span>ارسال جهانی</span><span>اندازه دلخواه شما</span><a href="#showroom">بازدید خصوصی از نمایشگاه ↗</a></div>
   <header><div class="wrap header-inner">
     <a class="brand" href="#" aria-label="صفحه اصلی آتلیه ورا">ATELIER VÉRA<span>هنر بافت</span></a>
-    <nav class="nav" id="main-nav" aria-label="پیمایش اصلی"><a href="#archive">آرشیو</a><a href="#studio">استودیوی فضا</a><a href="#craft">هنر و خاستگاه</a><a href="#showroom">نمایشگاه خصوصی</a></nav>
+    <nav class="nav" id="main-nav" aria-label="پیمایش اصلی"><details class="collection-menu"><summary>مجموعه‌ها</summary><div><button data-edit="knotted">دست‌گره</button><button data-edit="vintage">الهام از وینتیج</button><button data-quick-size="runner">کناره‌ها</button><button data-edit="new">تازه‌های آرشیو</button><a href="#archive">آرشیو</a></div></details><a href="#studio">استودیوی فضا</a><a href="#craft">هنر و خاستگاه</a></nav>
     <button class="icon-btn mobile-menu" aria-label="باز و بسته کردن پیمایش" aria-controls="main-nav" aria-expanded="false">${icon('menu')}</button>
     <button class="language-toggle" id="language-toggle" type="button" aria-label="Switch language">English</button>
     <label class="currency-control"><span class="sr-only">ارز نمایش قیمت</span><select id="currency-select" aria-label="ارز نمایش قیمت" dir="ltr">${currencies.map(({ code, symbol, flag }) => `<option value="${code}">${flag} ${code} · ${symbol}</option>`).join('')}</select></label>
     <button class="folio-trigger" data-action="open-folio">${icon('bag')} فهرست انتخاب <span class="badge" id="folio-count">۰</span></button>
+    <a class="btn header-cta" href="#showroom">رزرو مشاوره ${icon('arrow')}</a>
   </div></header>
   <main>
     <section class="wrap hero" aria-labelledby="hero-title">
       <div class="hero-copy"><div class="eyebrow">گزیده‌هایی با داستان‌های ماندگار</div><h1 id="hero-title">برای زندگی<br>بافته شده؛<br><em>برای ماندن.</em></h1><p>قالی‌هایی استثنایی، باحوصله و به‌دست انسان بافته‌شده.<br>آرشیوی گزیده از بافت، سنت و زیبایی آرام برای خانه‌های ما.</p>
         <div class="hero-actions"><a class="btn" href="#archive">گشت‌وگذار در آرشیو ${icon('arrow')}</a><a class="text-link" href="#studio">زاویه دید خود را بیابید ${icon('arrow')}</a></div>
+        <div class="hero-filters" aria-label="گزیده‌های آرشیو"><button data-edit="knotted">دست‌گره</button><button data-edit="vintage">الهام از وینتیج</button><button data-quick-size="runner">کناره‌ها</button><button data-edit="new">تازه‌های آرشیو</button></div>
         <div class="provenance-metrics"><div><strong>۱۰۰٪</strong>الیاف طبیعی دست‌ریس</div><div><strong>برای شما</strong>امکان سفارش اندازه دلخواه</div><div><strong>ماندگار</strong>هنری برای نسل‌ها</div></div>
       </div>
       <div class="hero-art">${heroRoom()}<div class="hero-rug">${rugs[0].svgPattern('hero', rugText(rugs[0], 'name'))}</div><div class="art-top"><span>خانه‌ای سنجیده — شماره ۰۱</span><span>همیشه دست‌بافت</span></div><div class="vertical-note">تجملی آرام‌تر</div><div class="art-card"><div class="mini-art">${rugs[0].svgPattern('hero-thumb', rugText(rugs[0], 'name'))}</div><div><h3>یادگار اوشاک</h3><p>اوشاک، ترکیه &nbsp; / &nbsp; پشم دست‌ریس</p></div><button data-action="inspect" data-id="oushak" aria-label="مشاهده یادگار اوشاک">${icon('arrow')}</button></div></div>
     </section>
     <div class="trust-bar wrap"><span>${icon('weave')} دست‌بافت، نه تولید انبوه</span><span>${icon('globe')} از بهترین سرزمین‌های بافندگی جهان</span><span>${icon('leaf')} الیاف طبیعی، جلوه‌ای ماندگار</span><span>${icon('bag')} نگاهی شخصی به هر بافته</span></div>
     <section class="wrap section archive-heading" id="archive" aria-labelledby="archive-title"><div class="section-top"><div><div class="eyebrow">آرشیو بافته‌ها</div><h2 id="archive-title">جهانی زیر پای شما.</h2></div><p>ده بافته استثنایی، هنر چندین سده.<br>بافته‌ای را بیابید که با فضای شما سخن می‌گوید.</p></div>
-      <div class="catalog-tools"><div class="filter-group">
+      <details class="filter-drawer" open><summary>${icon('weave')} فیلتر و جست‌وجو <span>+</span></summary><div class="catalog-tools"><div class="filter-group">
         <label><span class="sr-only">سبک بافت</span><select id="style-filter" aria-label="سبک بافت"><option value="">سبک بافت</option>${['Classic', 'Tribal / Nomadic', 'Modern / Vintage', 'Persian', 'Modern', 'Moroccan', 'Kilim', 'Minimalist'].map(value => `<option value="${value}">${localizedStyle(value)}</option>`).join('')}</select></label>
         <label><span class="sr-only">جنس الیاف</span><select id="material-filter" aria-label="جنس الیاف"><option value="">جنس الیاف</option>${['Wool', 'Silk', 'Jute'].map(value => `<option value="${value}">${localizedMaterial(value)}</option>`).join('')}</select></label>
         <label><span class="sr-only">ابعاد</span><select id="size-filter" aria-label="ابعاد"><option value="">ابعاد</option>${sizes.map(size => `<option value="${size}">${sizeLabel(size)}</option>`).join('')}</select></label>
         <label><span class="sr-only">خاستگاه</span><select id="origin-filter" aria-label="خاستگاه"><option value="">خاستگاه</option>${[...new Set(rugs.map(rug => rug.city))].map(city => `<option value="${escape(city)}">${escape(city)}</option>`).join('')}</select></label>
-        <label><span class="sr-only">رنگ غالب</span><select id="color-filter" aria-label="رنگ غالب"><option value="">رنگ غالب</option>${[...new Set(rugs.map(rug => rug.dominantColor))].map(color => `<option value="${color}">${specText(color)}</option>`).join('')}</select></label>
+        <label><span class="sr-only">رنگ غالب</span><select id="color-filter" aria-label="رنگ غالب"><option value="">رنگ غالب</option>${[...new Set([...rugs.map(rug => rug.dominantColor), ...colorPalette.map(color => color.name)])].map(color => `<option value="${color}">${specText(color)}</option>`).join('')}</select></label>
       </div><label class="search-box">${icon('search')}<input id="search" type="search" placeholder="جست‌وجو در آرشیو" aria-label="جست‌وجو در آرشیو" maxlength="100"></label></div>
-      <div class="catalog-status"><div><span id="result-count" aria-live="polite"></span><div class="filter-pills" id="filter-pills"></div></div><label>مرتب‌سازی: <select class="sort-select" id="sort" aria-label="مرتب‌سازی قالی‌ها"><option value="featured">منتخب</option><option value="low">قیمت: از کم به زیاد</option><option value="high">قیمت: از زیاد به کم</option><option value="density">تراکم گره</option></select></label></div>
+      <div class="discovery-options"><div class="size-chips" role="group" aria-label="انتخاب سریع ابعاد">${[['runner', 'کناره'], ['5x8', '5′ × 8′'], ['8x10', '8′ × 10′'], ['9x12', '9′ × 12′'], ['10x14', 'بزرگ‌اندازه']].map(([value, label]) => `<button data-quick-size="${value}" aria-pressed="false">${label}</button>`).join('')}</div><div class="color-swatches" role="group" aria-label="پالت رنگ">${colorPalette.map(color => `<button class="tone-${color.name.toLowerCase()}" data-color="${color.name}" aria-pressed="false" aria-label="${color.name}" title="${color.name}"><span class="sr-only">${color.name}</span></button>`).join('')}</div></div></details>
+      <div class="catalog-status"><div><span id="result-count" aria-live="polite"></span><div class="filter-pills" id="filter-pills"></div></div><label>مرتب‌سازی: <select class="sort-select" id="sort" aria-label="مرتب‌سازی قالی‌ها"><option value="featured">منتخب</option><option value="low">قیمت: از کم به زیاد</option><option value="high">قیمت: از زیاد به کم</option><option value="newest">جدیدترین</option><option value="size">بزرگ‌ترین ابعاد موجود</option><option value="density">تراکم گره</option></select></label></div>
       <div class="catalog" id="catalog"></div><div class="archive-footer"><button class="btn outline" id="view-archive">مشاهده همه بافته‌ها <span class="mono">۱۰</span> ${icon('arrow')}</button></div>
       <p class="rate-status" id="rate-status" role="status" aria-live="polite"></p>
     </section>
@@ -143,6 +152,7 @@ $('#app').innerHTML = `
   <footer class="wrap"><div class="footer-top"><a class="brand" href="#">ATELIER VÉRA<span>هنر بافت</span></a><p>زیبایی، شکیبایی می‌طلبد.</p><div class="footer-links"><a href="#archive">آرشیو</a><a href="#craft">نگاه ما</a><a href="#showroom">با ما در تماس باشید ${icon('arrow')}</a></div></div><div class="footer-bottom"><span>© ${new Date().getFullYear()} ATELIER VÉRA. تمامی حقوق محفوظ است.</span><span>طراحی سنجیده. &nbsp; هنر ماندگار. &nbsp; زندگی زیباتر.</span></div></footer>
   <dialog class="inspect-dialog" id="inspect-dialog" aria-labelledby="inspect-title"></dialog>
   <dialog class="folio-dialog" id="folio-dialog" aria-labelledby="folio-title"></dialog>
+  <dialog class="lead-dialog" id="lead-dialog" aria-labelledby="lead-title"></dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 `;
 
@@ -185,7 +195,7 @@ function setLanguage(language) {
     $('#language-toggle').setAttribute('aria-label', language === 'fa' ? 'Switch language to English' : 'تغییر زبان به فارسی');
     $('#studio-rug').innerHTML = rugs.map(rug => `<option value="${rug.id}">${rugText(rug, 'name')}</option>`).join('');
     $('#studio-rug').value = state.rug;
-    $('#color-filter').innerHTML = `<option value="">${language === 'fa' ? 'رنگ غالب' : 'Dominant color'}</option>${[...new Set(rugs.map(rug => rug.dominantColor))].map(color => `<option value="${color}">${specText(color)}</option>`).join('')}`;
+    $('#color-filter').innerHTML = `<option value="">${language === 'fa' ? 'رنگ غالب' : 'Dominant color'}</option>${[...new Set([...rugs.map(rug => rug.dominantColor), 'Terracotta', 'Indigo', 'Olive', 'Cream', 'Charcoal'])].map(color => `<option value="${color}">${specText(color)}</option>`).join('')}`;
     $('#color-filter').value = state.color;
     renderCatalog();
     renderStudio();
@@ -205,19 +215,20 @@ function updateBookingDate() {
 }
 
 function renderCatalog() {
-  const filtered = filterRugs(rugs.map(rug => ({ ...rug, searchText: Object.values(rugTranslations[rug.id]).join(' ') })), state);
-  if (state.sort === 'low') filtered.sort((a, b) => priceFor(a, state.size || '8x10') - priceFor(b, state.size || '8x10'));
-  if (state.sort === 'high') filtered.sort((a, b) => priceFor(b, state.size || '8x10') - priceFor(a, state.size || '8x10'));
-  if (state.sort === 'density') filtered.sort((a, b) => b.kpsi - a.kpsi);
-  const active = state.style || state.material || state.size || state.origin || state.color || state.search;
+  const filtered = sortRugs(filterRugs(rugs.map(rug => ({ ...rug, searchText: Object.values(rugTranslations[rug.id]).join(' ') })), state), state.sort, state.size || '8x10');
+  const active = filterKeys.some(key => state[key]);
   const visible = state.expanded || active || state.sort !== 'featured' ? filtered : filtered.slice(0, 4);
   $('#result-count').textContent = state.language === 'fa'
-    ? `${persianDigits(visible.length)} بافته از ${persianDigits(filtered.length)} انتخاب`
-    : `${visible.length} of ${filtered.length} rugs`;
-  $('#filter-pills').innerHTML = ['style', 'material', 'size', 'origin', 'color', 'search'].filter(key => state[key]).map(key => `<button class="pill" data-clear="${key}" aria-label="${state.language === 'fa' ? 'حذف فیلتر' : 'Remove filter'} ${escape(state[key])}">${escape(key === 'size' ? persianDigits(formatSize(state[key])) : key === 'style' ? localizedStyle(state[key]) : key === 'material' ? localizedMaterial(state[key]) : state[key])} &nbsp; ×</button>`).join('') + (active ? `<button class="reset" id="reset-filters">${state.language === 'fa' ? 'پاک‌کردن فیلترها' : 'Clear filters'}</button>` : '');
+    ? `${persianDigits(visible.length)} بافته از ${persianDigits(rugs.length)} · ${persianDigits(filtered.length)} مطابق فیلتر`
+    : `Showing ${visible.length} of ${rugs.length} pieces · ${filtered.length} matches`;
+  $('#filter-pills').innerHTML = filterKeys.filter(key => state[key]).map(key => `<button class="pill" data-clear="${key}" aria-label="${state.language === 'fa' ? 'حذف فیلتر' : 'Remove filter'} ${escape(state[key])}">${escape(key === 'size' ? persianDigits(formatSize(state[key])) : key === 'edit' ? translate(editLabels[state[key]], state.language) : key === 'style' ? localizedStyle(state[key]) : key === 'material' ? localizedMaterial(state[key]) : specText(state[key]))} &nbsp; ×</button>`).join('') + (active ? `<button class="reset" id="reset-filters">${state.language === 'fa' ? 'پاک‌کردن فیلترها' : 'Clear all'}</button>` : '');
   $('#catalog').innerHTML = visible.length ? visible.map((rug, index) => `
     <article class="rug-card"><div class="rug-picture">
-      <div class="rug-art">${rug.svgPattern(`card-${rug.id}`, rugText(rug, 'name'))}</div>
+      <button class="card-image-link" data-action="inspect" data-id="${rug.id}" aria-label="${escape(rugText(rug, 'name'))}">
+        <span class="image-skeleton" aria-hidden="true"></span>
+        <img class="rug-art catalog-image" src="${artworkSource(rug.svgPattern(`card-${rug.id}`, ''))}" width="340" height="440" loading="lazy" decoding="async" alt="${escape(rugText(rug, 'name'))}">
+        <span class="card-room-preview" aria-hidden="true">${roomPreview(rug, `preview-${rug.id}`, state.size || '8x10')}</span>
+      </button>
       ${index === 0 ? `<span class="card-tag">${state.language === 'fa' ? 'گزیده آتلیه' : 'Atelier selection'}</span>` : ''}
       <button class="card-save" data-action="add" data-id="${rug.id}" aria-label="${state.language === 'fa' ? 'افزودن' : 'Add'} ${rugText(rug, 'name')} ${state.language === 'fa' ? 'به فهرست' : 'to selection'}">${icon('bag')}</button>
       <div class="quick-actions"><button data-action="inspect" data-id="${rug.id}">${icon('eye')} ${state.language === 'fa' ? 'مشاهده بافت' : 'View rug'}</button><button data-action="studio" data-id="${rug.id}">${icon('room')} ${state.language === 'fa' ? 'استودیوی فضا' : 'Room studio'}</button></div>
@@ -228,6 +239,19 @@ function renderCatalog() {
   `).join('') : `<div class="empty">${state.language === 'fa' ? 'بافته‌ای با این مشخصات پیدا نشد.' : 'No rugs match these filters.'}<br><button class="text-link" id="empty-reset">${state.language === 'fa' ? 'پاک‌کردن فیلترها' : 'Clear filters'} ←</button></div>`;
   $('#view-archive').hidden = !!active || state.sort !== 'featured';
   $('#view-archive').innerHTML = `${state.language === 'fa' ? state.expanded ? 'نمایش گزیده‌های آتلیه' : 'مشاهده همه بافته‌ها' : state.expanded ? 'Show Atelier selections' : 'View all rugs'} <span class="mono">${persianDigits(state.expanded ? 4 : 10)}</span> ${icon('arrow')}`;
+  document.querySelectorAll('.catalog-image').forEach(image => {
+    const loaded = () => image.closest('.card-image-link').classList.add('loaded');
+    const failed = () => {
+      loaded();
+      image.alt = translate('تصویر در دسترس نیست؛ جزئیات بافت را باز کنید.', state.language);
+    };
+    image.addEventListener('load', loaded, { once: true });
+    image.addEventListener('error', failed, { once: true });
+    if (image.complete) image.naturalWidth ? loaded() : failed();
+  });
+  document.querySelectorAll('[data-quick-size]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.quickSize === state.size)));
+  document.querySelectorAll('[data-color]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.color === state.color)));
+  document.querySelectorAll('[data-edit]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.edit === state.edit)));
   translatePage();
 }
 
@@ -260,6 +284,7 @@ function renderStudio() {
 function inspect(id, size = state.size || '8x10') {
   const rug = rugs.find(item => item.id === id);
   if (!rug || !sizes.includes(size)) return;
+  if (state.inspect !== rug.id) state.galleryView = 'layout';
   state.inspect = rug.id;
   state.inspectSize = size;
   const specs = [
@@ -271,33 +296,71 @@ function inspect(id, size = state.size || '8x10') {
     ['قدمت و وضعیت', specText(rug.condition)],
     ['ارتفاع پرز', persianDigits(rug.pileHeight)],
     ['شناسه آرشیو', rug.sku],
+    ['ابعاد دقیق', dimensionsLabel(size)],
   ];
   $('#inspect-dialog').innerHTML = `
     <button class="icon-btn modal-close" data-close="inspect-dialog" aria-label="بستن جزئیات">${icon('close')}</button>
     <div class="inspect-layout"><div class="inspect-art">
-      <div class="zoom-window" tabindex="0" role="group" aria-label="بررسی بافت با کلیدهای جهت‌نما" aria-describedby="zoom-help">
-        <div class="zoom-art">${rug.svgPattern('inspect-art', rugText(rug, 'name'))}</div>
-        <div class="inspection-lens" aria-hidden="true" hidden>${rug.svgPattern('inspect-lens', rugText(rug, 'name'))}</div>
-      </div>
-      <button class="zoom-controls" id="zoom" aria-pressed="false">${icon('search')} &nbsp; ذره‌بین بافت</button>
-      <p class="form-note" id="zoom-help">ذره‌بین را فعال کنید؛ حرکت اشاره‌گر، لمس یا کلیدهای جهت‌نما.</p>
-      <p class="demo-note">تصویر برداری نمایشی؛ برای بررسی اصالت، عکس واقعی درخواست کنید.</p>
+      <div id="gallery-panel"></div>
+      <div class="gallery-thumbnails" role="group" aria-label="نماهای بافت">${galleryViews.map(view => `<button data-gallery="${view}" aria-pressed="${view === state.galleryView}" aria-controls="gallery-panel">${galleryArtwork(rug, view, `thumb-${view}`, size)}<span>${viewLabels[view]}</span></button>`).join('')}</div>
+      <p class="demo-note">تمام نماها تصویرسازی‌اند؛ عکس واقعی و فیلم را از گالری درخواست کنید.</p>
     </div><div class="inspect-copy"><div class="eyebrow">${rugText(rug, 'collection')}</div>
       <h2 id="inspect-title">${rugText(rug, 'name')}</h2><p>${rugText(rug, 'description')}</p>
-      <div class="spec-heading">شناسنامه و مشخصات بافت</div><dl class="spec-grid">${specs.map(([label, value]) => `<div><dt>${label}</dt><dd>${escape(value)}</dd></div>`).join('')}</dl>
+      <div class="spec-heading">شناسنامه و مشخصات بافت</div><dl class="spec-grid">${specs.map(([label, value]) => `<div><dt>${label}</dt><dd${label === 'ابعاد دقیق' ? ' id="exact-dimensions" dir="ltr"' : ''}>${escape(value)}</dd></div>`).join('')}</dl>
       <p class="demo-note">اطلاعات نمونه؛ شناسنامه معتبر فروشنده پیش از خرید الزامی است.</p>
       <label class="control-title" for="inspect-size">ابعاد دلخواه</label><select class="control-select" id="inspect-size">${rug.sizes.map(value => `<option value="${value}" ${value === size ? 'selected' : ''}>${sizeLabel(value)}</option>`).join('')}</select>
       <div class="modal-price"><strong id="inspect-price">${money(priceFor(rug, size))}</strong><span>قیمت تقریبی؛ تأیید با گالری</span></div>
       <p class="form-note currency-disclaimer"></p>
+      <button class="btn" data-lead="viewing">رزرو بازدید از نمایشگاه ${icon('arrow')}</button>
       <a class="btn vip-inquiry" id="vip-inquiry" target="_blank" rel="noopener noreferrer"></a>
       <p class="form-note vip-unavailable" hidden>برای فعال‌سازی واتس‌اپ، شماره گالری را تنظیم کنید.</p>
+      <button class="btn outline media-request" data-lead="media">درخواست فیلم باکیفیت / نمونه بافت ${icon('arrow')}</button>
       <button class="btn outline" data-action="add-inspect">${icon('bag')} افزودن به فهرست انتخاب ${icon('arrow')}</button>
       <button class="text-link" data-action="studio" data-id="${rug.id}">مشاهده در استودیوی فضا ${icon('arrow')}</button>
     </div></div>`;
+  renderGallery();
   translatePage();
-  setupMagnifier($('.zoom-window'), $('#zoom'));
   updateCurrencyUI();
   if (!$('#inspect-dialog').open) $('#inspect-dialog').showModal();
+}
+
+function renderGallery() {
+  const rug = rugs.find(item => item.id === state.inspect);
+  const view = state.galleryView;
+  const zoomable = view === 'layout' || view === 'fringe';
+  $('#gallery-panel').innerHTML = `<div class="gallery-caption" aria-live="polite">${viewLabels[view]}</div>
+    <div class="zoom-window gallery-${view}" ${zoomable ? 'tabindex="0" role="group" aria-label="بررسی بافت با کلیدهای جهت‌نما" aria-describedby="zoom-help"' : ''}>
+      <div class="zoom-art">${galleryArtwork(rug, view, 'inspect-art', state.inspectSize)}</div>
+      ${zoomable ? `<div class="inspection-lens" aria-hidden="true" hidden>${rug.svgPattern('inspect-lens', '')}</div>` : ''}
+    </div>
+    ${zoomable ? `<button class="zoom-controls" id="zoom" aria-pressed="false">${icon('search')} ذره‌بین بافت</button><p class="form-note" id="zoom-help">ذره‌بین را فعال کنید؛ حرکت اشاره‌گر، لمس یا کلیدهای جهت‌نما.</p>` : '<p class="form-note">پیش‌نمایش تقریبی؛ رنگ و تناسب را با گالری تأیید کنید.</p>'}`;
+  if (zoomable) setupMagnifier($('.zoom-window'), $('#zoom'), view === 'fringe' ? { top: 360, width: 120, height: 80, sample: 25 } : {});
+  document.querySelectorAll('[data-gallery]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.gallery === view)));
+  translatePage();
+}
+
+let leadPending = false;
+function openLead(kind) {
+  if (!['viewing', 'media'].includes(kind)) return;
+  const dialog = $('#lead-dialog');
+  if (!leadPending) {
+    const rug = rugs.find(item => item.id === state.inspect);
+    dialog.innerHTML = `<button class="icon-btn modal-close" data-close="lead-dialog" aria-label="بستن جزئیات">${icon('close')}</button>
+      <div class="eyebrow">همراه آتلیه</div><h2 id="lead-title">${kind === 'viewing' ? 'رزرو بازدید از نمایشگاه' : 'درخواست فیلم باکیفیت / نمونه بافت'}</h2>
+      <p>${rugText(rug, 'name')} · <span class="mono">${rug.sku}</span><br>${sizeLabel(state.inspectSize)}</p>
+      <form id="product-lead" class="booking-form" data-kind="${kind}" data-rug="${rug.id}" data-size="${state.inspectSize}">
+        <label class="field full">نام شما<input name="name" autocomplete="name" required maxlength="100"></label>
+        <label class="field full">نشانی ایمیل<input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+        <label class="field">آتلیه<select name="location"><option value="New York">نیویورک</option><option value="Copenhagen">کپنهاگ</option><option value="Milan">میلان</option></select></label>
+        <label class="field">تاریخ پیشنهادی<input name="date" type="date" min="${bookingToday('New York')}" required></label>
+        <label class="field full">زمان پیشنهادی<input name="time" type="time" required><span class="form-note">به وقت محلی آتلیه؛ تأیید نهایی با گالری.</span></label>
+        <label class="field full">یادداشتی برای همراه آتلیه (اختیاری)<textarea name="note" maxlength="1000" rows="2"></textarea></label>
+        <button class="btn full" type="submit">ارسال درخواست ${icon('arrow')}</button>
+        <p class="form-note full">این درخواست ملاقات است، نه رزرو قطعی. همراه آتلیه تاریخ پیشنهادی شما را بررسی می‌کند.</p>
+      </form>`;
+    translatePage();
+  }
+  if (!dialog.open) dialog.showModal();
 }
 
 function persistFolio() {
@@ -345,7 +408,7 @@ function updatePressed(selector, key, datasetKey) {
 }
 
 function resetFilters() {
-  for (const key of ['style', 'material', 'size', 'origin', 'color', 'search']) state[key] = '';
+  for (const key of filterKeys) state[key] = '';
   for (const id of ['style-filter', 'material-filter', 'size-filter', 'origin-filter', 'color-filter', 'search']) $(`#${id}`).value = '';
   state.sort = 'featured';
   $('#sort').value = 'featured';
@@ -362,10 +425,25 @@ document.addEventListener('click', event => {
   if (action === 'add') addFolio(id, state.size || '8x10');
   if (action === 'add-inspect') addFolio(state.inspect, state.inspectSize);
   if (action === 'open-folio') { if (!pendingRequests.inquiry) renderFolio(); $('#folio-dialog').showModal(); }
-  if (['inspect-dialog', 'folio-dialog'].includes(close)) $(`#${close}`).close();
-  if (['style', 'material', 'size', 'origin', 'color', 'search'].includes(clear)) {
+  if (['inspect-dialog', 'folio-dialog', 'lead-dialog'].includes(close)) $(`#${close}`).close();
+  if (button.dataset.lead) openLead(button.dataset.lead);
+  if (galleryViews.includes(button.dataset.gallery)) { state.galleryView = button.dataset.gallery; renderGallery(); }
+  if (button.dataset.edit || button.dataset.quickSize || button.dataset.color) {
+    const key = button.dataset.edit ? 'edit' : button.dataset.quickSize ? 'size' : 'color';
+    const value = button.dataset.edit || button.dataset.quickSize || button.dataset.color;
+    state[key] = state[key] === value ? '' : value;
+    if (key !== 'edit') $(`#${key}-filter`).value = state[key];
+    renderCatalog();
+    if (button.closest('.hero-filters, .collection-menu')) {
+      $('.collection-menu').open = false;
+      $('#archive').scrollIntoView({ behavior: 'smooth' });
+      $('.nav').classList.remove('open');
+      $('.mobile-menu').setAttribute('aria-expanded', 'false');
+    }
+  }
+  if (filterKeys.includes(clear)) {
     state[clear] = '';
-    $(`#${clear === 'search' ? 'search' : `${clear}-filter`}`).value = '';
+    if (clear !== 'edit') $(`#${clear === 'search' ? 'search' : `${clear}-filter`}`).value = '';
     renderCatalog();
   }
   if (button.id === 'reset-filters' || button.id === 'empty-reset') resetFilters();
@@ -393,14 +471,14 @@ document.addEventListener('click', event => {
 
 for (const key of ['style', 'material', 'size', 'origin', 'color']) $(`#${key}-filter`).addEventListener('change', event => {
   const value = event.target.value;
-  const allowed = key === 'size' ? sizes : key === 'origin' ? rugs.map(rug => rug.city) : key === 'color' ? rugs.map(rug => rug.dominantColor) : key === 'style' ? rugs.flatMap(rug => [rug.style, rug.category]) : rugs.map(rug => rug[key]);
+  const allowed = key === 'size' ? sizes : key === 'origin' ? rugs.map(rug => rug.city) : key === 'color' ? [...rugs.map(rug => rug.dominantColor), ...colorPalette.map(color => color.name)] : key === 'style' ? rugs.flatMap(rug => [rug.style, rug.category]) : rugs.map(rug => rug[key]);
   if (value && !allowed.includes(value)) return;
   state[key] = value;
   renderCatalog();
 });
 $('#search').addEventListener('input', event => { state.search = event.target.value; renderCatalog(); });
 $('#sort').addEventListener('change', event => {
-  if (!['featured', 'low', 'high', 'density'].includes(event.target.value)) return;
+  if (!['featured', 'low', 'high', 'density', 'newest', 'size'].includes(event.target.value)) return;
   state.sort = event.target.value;
   renderCatalog();
 });
@@ -414,7 +492,45 @@ $('#inspect-dialog').addEventListener('change', event => {
   if (event.target.id === 'inspect-size' && sizes.includes(event.target.value)) {
     state.inspectSize = event.target.value;
     $('#inspect-price').innerHTML = money(priceFor(rugs.find(rug => rug.id === state.inspect), state.inspectSize));
+    $('#exact-dimensions').textContent = dimensionsLabel(state.inspectSize);
+    renderGallery();
     updateCurrencyUI();
+  }
+});
+$('#lead-dialog').addEventListener('change', event => {
+  if (event.target.name === 'location') {
+    const form = $('#product-lead');
+    form.elements.date.min = bookingToday(form.elements.location.value);
+  }
+});
+$('#lead-dialog').addEventListener('submit', async event => {
+  if (event.target.id !== 'product-lead') return;
+  event.preventDefault();
+  const form = event.target;
+  if (leadPending || !form.reportValidity()) return;
+  const data = Object.fromEntries(new FormData(form));
+  if (data.date < bookingToday(data.location)) { notify('لطفاً تاریخ امروز یا روزی در آینده را انتخاب کنید.'); return; }
+  const rug = rugs.find(item => item.id === form.dataset.rug);
+  const payload = {
+    name: data.name, email: data.email, location: data.location, date: data.date, consultation: 'private',
+    note: `${form.dataset.kind === 'media' ? 'High-resolution video / swatch request; preferred follow-up' : 'Showroom viewing request'}: ${rug.name} — SKU ${rug.sku}; ${formatSize(form.dataset.size)}; preferred local time ${data.time}. ${data.note}`,
+  };
+  const submit = form.querySelector('[type="submit"]');
+  leadPending = true;
+  submit.disabled = true;
+  form.setAttribute('aria-busy', 'true');
+  try {
+    const response = await fetch('/api/appointments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: AbortSignal.timeout(15000) });
+    const result = await response.json();
+    if (!response.ok) throw new Error('در ارسال درخواست مشکلی پیش آمد. لطفاً دوباره تلاش کنید.');
+    form.innerHTML = `<div class="success-panel full" role="status"><h3>درخواست شما دریافت شد.</h3><p>شناسه پیگیری: <span class="mono">${escape(result.reference)}</span></p><p class="form-note">تاریخ پیشنهادی شما پس از تأیید همراه آتلیه نهایی می‌شود.</p></div>`;
+    translatePage();
+  } catch {
+    notify('در ارسال درخواست مشکلی پیش آمد. لطفاً دوباره تلاش کنید.');
+  } finally {
+    leadPending = false;
+    submit.disabled = false;
+    form.removeAttribute('aria-busy');
   }
 });
 $('#language-toggle').addEventListener('click', () => setLanguage(state.language === 'fa' ? 'en' : 'fa'));
