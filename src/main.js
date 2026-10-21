@@ -329,8 +329,8 @@ function renderGallery() {
   const rug = rugs.find(item => item.id === state.inspect);
   const view = state.galleryView;
   const zoomable = view === 'layout' || view === 'fringe';
-  $('#gallery-panel').innerHTML = `<div class="gallery-caption" aria-live="polite">${viewLabels[view]}</div>
-    <div class="zoom-window gallery-${view}" ${zoomable ? 'tabindex="0" role="group" aria-label="بررسی بافت با کلیدهای جهت‌نما" aria-describedby="zoom-help"' : ''}>
+  $('#gallery-panel').innerHTML = `<div class="gallery-caption" aria-live="polite">${escape(viewLabels[view])}</div>
+    <div class="zoom-window gallery-${escape(view)}" ${zoomable ? 'tabindex="0" role="group" aria-label="بررسی بافت با کلیدهای جهت‌نما" aria-describedby="zoom-help"' : ''}>
       <div class="zoom-art">${galleryArtwork(rug, view, 'inspect-art', state.inspectSize)}</div>
       ${zoomable ? `<div class="inspection-lens" aria-hidden="true" hidden>${rug.svgPattern('inspect-lens', '')}</div>` : ''}
     </div>
@@ -349,7 +349,7 @@ function openLead(kind) {
     dialog.innerHTML = `<button class="icon-btn modal-close" data-close="lead-dialog" aria-label="بستن جزئیات">${icon('close')}</button>
       <div class="eyebrow">همراه آتلیه</div><h2 id="lead-title">${kind === 'viewing' ? 'رزرو بازدید از نمایشگاه' : 'درخواست فیلم باکیفیت / نمونه بافت'}</h2>
       <p>${rugText(rug, 'name')} · <span class="mono">${rug.sku}</span><br>${sizeLabel(state.inspectSize)}</p>
-      <form id="product-lead" class="booking-form" data-kind="${kind}" data-rug="${rug.id}" data-size="${state.inspectSize}">
+      <form id="product-lead" class="booking-form" data-kind="${escape(kind)}" data-rug="${escape(rug.id)}" data-size="${escape(state.inspectSize)}">
         <label class="field full">نام شما<input name="name" autocomplete="name" required maxlength="100"></label>
         <label class="field full">نشانی ایمیل<input name="email" type="email" autocomplete="email" required maxlength="254"></label>
         <label class="field">آتلیه<select name="location"><option value="New York">نیویورک</option><option value="Copenhagen">کپنهاگ</option><option value="Milan">میلان</option></select></label>
