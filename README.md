@@ -2,6 +2,31 @@
 
 A responsive rug showroom with ten original SVG weaves, combinable archive filters, a live architectural room studio, zoomable specifications, a persistent inquiry folio, and private or virtual consultation requests.
 
+## Currency and VIP gallery integration
+
+- `src/currencyService.js` normalizes USD-based prices into USD, EUR, AED, TRY, CAD and **IRT (toman)**. One toman is ten Iranian rials; IRR is never silently treated as IRT.
+- `src/currencyStore.js` persists the selected currency and publishes loading/rate updates. Cards, inspection, selection totals and WhatsApp quotations share the same formatter. A refresh does not replace open forms or discard typed contact details.
+- Rates use a validated, versioned four-hour `localStorage` cache, bounded requests, in-flight deduplication, public fallback, then expired cached rates or explicitly illustrative baseline rates. Storage failures do not block browsing. Source, retrieval time, stale status and the illustrative toman warning appear beneath the archive.
+- The public fallback is `https://open.er-api.com/v6/latest/USD`. Its official IRR rate is deliberately **not** used as an Iranian street-market quote: international fiat rates can be live while the toman rate remains illustrative.
+
+### AlanChand adapter
+
+Set `VITE_ALANCHAND_ENDPOINT` at build time to your HTTPS, CORS-enabled AlanChand adapter, or a same-origin adapter path. No undocumented AlanChand endpoint or response format is assumed, and no paid API dependency is required. Without this setting the public fallback is used directly.
+
+The adapter must obtain authorized AlanChand data and return `{ "base": "USD", "rates": { "USD": 1, "EUR": 0.92, "AED": 3.6725, "TRY": 38, "CAD": 1.39, "IRT": 100000 } }`. These numbers illustrate the **contract only**, not current market rates. `base` may also be `IRT` or `IRR`, with each rate expressed as quote-currency units per one base unit. All five fiat currencies must be present. For a USD base, supply either `IRT` or `IRR` (which is divided by ten). Return finite positive JSON numbers, not localized price strings.
+
+Implement the upstream adapter in your hosting infrastructure: this repository does not guess AlanChand's private API, scrape its website, or provide an open proxy. Keep provider credentials on that server, never in `VITE_*` variables. Configure provider-side caching, licensing, freshness checks and CORS for your actual origin. Only send requests to a trusted adapter; its response is treated as a market-rate snapshot.
+
+When running `npm start`, also set the same `VITE_ALANCHAND_ENDPOINT` in the server environment so its CSP allows that HTTPS origin. The server always allows the public fallback origin. For other hosts, configure an equivalent `connect-src` policy. GitHub Pages requires a public CORS-enabled external adapter; it cannot run a same-origin API.
+
+### Gallery configuration and inventory
+
+Set `VITE_WHATSAPP_NUMBER` before building to the gallery's international WhatsApp number, including country code (digits, or familiar phone punctuation). No recipient is invented: the VIP link stays hidden with a configuration notice until a valid number is supplied. Each link contains the selected rug name, SKU/ID, size and current indicative currency price. The visitor must review and send the message in WhatsApp; clicking the link does not complete a purchase.
+
+`src/rugs.js` contains illustrative foundation, pile, dyes, age/condition, city, dominant color and broad style categories. Flatweaves are not presented as knotted rugs. The existing foot dimensions are retained alongside runners, 2 × 3 m and 3 × 4 m options. `dimensions` is the shared metric source for the room simulator and size-based quotes; the simulator has a matching five-foot scale and living, dining and bedroom settings.
+
+`src/catalog.js`, `src/magnifier.js` and `src/inquiry.js` isolate combinable filtering, pointer/touch/keyboard inspection and safe lead-link construction. The magnifier samples the resolution-independent original SVG with a movable lens. These are **illustrations, not ultra-high-resolution rug photographs**: replace demo inventory, material/dye claims, prices and artwork with verified records and actual detail photography before commercial launch. Vintage/antique-inspired examples are new, not certified antique stock.
+
 ## Run
 
 Requires Node.js 24 or newer.
