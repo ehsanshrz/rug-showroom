@@ -7,7 +7,8 @@ import { filterRugs } from './catalog.js';
 import { whatsappInquiry } from './inquiry.js';
 import { setupMagnifier } from './magnifier.js';
 
-const currencyStore = createCurrencyStore({ service: createCurrencyService({ alanEndpoint: import.meta.env.VITE_ALANCHAND_ENDPOINT }) });
+const env = import.meta.env ?? {};
+const currencyStore = createCurrencyStore({ service: createCurrencyService({ alanEndpoint: env.VITE_ALANCHAND_ENDPOINT }) });
 
 const icons = {
   arrow: '<path d="M4 12h16m-6-6 6 6-6 6"/>',
@@ -490,7 +491,7 @@ function updateCurrencyUI() {
   const link = $('#vip-inquiry');
   if (link && state.inspect) {
     const rug = rugs.find(item => item.id === state.inspect);
-    const href = whatsappInquiry(import.meta.env.VITE_WHATSAPP_NUMBER, { rug, size: formatSize(state.inspectSize), price: `${priceText(priceFor(rug, state.inspectSize))} (${currency})` });
+    const href = whatsappInquiry(env.VITE_WHATSAPP_NUMBER, { rug, size: formatSize(state.inspectSize), price: `${priceText(priceFor(rug, state.inspectSize))} (${currency})` });
     link.hidden = !href;
     $('.vip-unavailable').hidden = !!href;
     if (href) link.href = href;

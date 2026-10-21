@@ -14,6 +14,8 @@ test('source entrypoint assets resolve under the GitHub Pages project path', asy
   const html = await readFile(join(root, 'index.html'), 'utf8');
   const css = await readFile(join(root, 'src/style.css'), 'utf8');
   const main = await readFile(join(root, 'src/main.js'), 'utf8');
+  assert.match(main, /const env = import\.meta\.env \?\? \{\}/);
+  assert.doesNotMatch(main, /import\.meta\.env\./);
   assert.match(html, /href="\.\/src\/assets\/favicon\.svg"/);
   assert.match(html, /href="\.\/src\/assets\/fonts\/cormorant-garamond\.ttf"/);
   assert.match(html, /href="\.\/src\/style\.css"/);
